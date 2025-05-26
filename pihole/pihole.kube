@@ -1,0 +1,10 @@
+[Install]
+WantedBy=default.target
+
+[Kube]
+# Point to the yaml file in the same directory
+Yaml=pihole.yml
+
+[Unit]
+Description=Pihole Service
+

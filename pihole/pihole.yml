@@ -1,0 +1,60 @@
+# Save the output of this file and use kubectl create -f to import
+# it into Kubernetes.
+#
+# Created with podman-5.2.2
+
+# NOTE: If you generated this yaml from an unprivileged and rootless podman container on an SELinux
+# enabled system, check the podman generate kube man page for steps to follow to ensure that your pod/container
+# has the right permissions to access the volumes added.
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: pihole-pod
+  name: pihole-pod
+spec:
+  containers:
+  - env:
+    - name: FTLCONF_dhcp_leaseTime
+      value: 7d
+    - name: FTLCONF_webserver_api_password
+      value: fed
+    - name: FTLCONF_dns_dnssec
+      value: "true"
+    - name: FTLCONF_dhcp_router
+      value: 192.168.250.3
+    - name: FTLCONF_dns_interface
+      value: eth1
+    - name: FTLCONF_dns_upstreams
+      value: 8.8.8.8;8.8.4.4
+    - name: TZ
+      value: Europe/Warsaw
+    - name: FTLCONF_webserver_port
+      value: "8080"
+    - name: FTLCONF_dhcp_active
+      value: "true"
+    - name: HOSTNAME
+      value: pihole
+    image: docker.io/pihole/pihole:2025.03.0
+    name: pihole
+    securityContext:
+      privileged: true
+      procMount: Unmasked
+    volumeMounts:
+    - mountPath: /etc/pihole
+      name: pihole-config
+    - mountPath: /etc/dnsmasq.d
+      name: dnsmasq-config
+  hostNetwork: true
+  hostname: pihole
+  volumes:
+  - hostPath:
+      path: /var/mnt/data/containers_data/pihole
+      type: Directory
+    name: pihole-config
+  - hostPath:
+      path: /var/mnt/data/containers_data/dnsmasq
+      type: Directory
+    name: dnsmasq-config
+

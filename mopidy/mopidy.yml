@@ -1,0 +1,59 @@
+# Save the output of this file and use kubectl create -f to import
+# it into Kubernetes.
+#
+# Created with podman-5.2.2
+
+# NOTE: If you generated this yaml from an unprivileged and rootless podman container on an SELinux
+# enabled system, check the podman generate kube man page for steps to follow to ensure that your pod/container
+# has the right permissions to access the volumes added.
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2025-04-25T16:57:15Z"
+  labels:
+    app: mopidy-pod
+  name: mopidy-pod
+  annotations:
+    io.podman.annotations.userns: "keep-id"
+spec:
+  containers:
+  - image: ghcr.io/fedextm/mopidy:v1.3.11
+    name: mopidy
+    resources:
+      limits:
+        memory: 512Mi
+    securityContext:
+      runAsGroup: 1000
+      runAsUser: 1000
+      fsGroup: 1000
+    volumeMounts:
+    - mountPath: /music
+      name: mp-music-0
+    - mountPath: /var/lib/mopidy
+      name: mp-data-0
+    - mountPath: /var/cache/mopidy
+      name: mp-cache-0
+    - mountPath: /etc/mopidy
+      name: mp-config-0
+  hostNetwork: true
+  hostUsers: true
+  hostname: mopidy.localhost
+  volumes:
+  - hostPath:
+      path: /var/mnt/data/music
+      type: Directory
+    name: mp-music-0
+  - hostPath:
+      path: /var/mnt/data/containers_data/mopidy/data
+      type: Directory
+    name: mp-data-0
+  - hostPath:
+      path: /var/mnt/data/containers_data/mopidy/cache
+      type: Directory
+    name: mp-cache-0
+  - hostPath:
+      path: /var/mnt/data/containers_data/mopidy/config
+      type: Directory
+    name: mp-config-0
+

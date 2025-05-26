@@ -1,0 +1,115 @@
+{
+  "ignition": {
+    "version": "3.5.0"
+  },
+  "kernelArguments": {
+    "shouldExist": [
+      "mitigations=off",
+      "net.ifnames=0",
+      "biosdevname=0",
+      "selinux=0",
+      "audit=0"
+    ],
+    "shouldNotExist": [
+      "mitigations=auto,nosmt"
+    ]
+  },
+  "passwd": {
+    "users": [
+      {
+        "name": "core",
+        "passwordHash": "$y$j9T$KBYCUm.3CT4/GE.MH0bWi/$ld9p.8ZzLBFRBhhde7RmKCtOvRlxl1NwyteIADPZij/",
+        "sshAuthorizedKeys": [
+          "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDerW5/oq90/fUprncOcLmQL4iuKP06d9PsGdmVBAwpcZYayyW3/or5Q6eFgAmEOfQEpKiB2NgUb8FOjhAzp9TdG/TAODRSZ2IWkov7HoFC5yzwfC+hoh01v3ioBFO0wioPC3aT6IQg7w6i3bq0vktdhhP/8lvodgKuU39UTLnD4ftJ/BB4ZIAoJySI4ce5OMulZZr79RLhsQwrm7FFb+zTPc4OpGIe0VRgynHXadCpjGQaEEP26S9Pbzi0vNxGVCPjUMbEvVU244M3ZI2PFu6Y8eBBVyeFIKcavGgwPHwzHTXZjwjZsz1P2yo1T5qsv2H5sOBvGiPda+b3J0b6Z5DYRAaGWf5oMJ1xn/Jasr/0hU2SNBwfN9Sl/qZ+GPSeFZSjqAa1t5r8fFwnifX3rVrlbk2v6YShK02IjZQ/YRmfZ7kbybchop2Sml8hmBH2686fGlOTL5/aC4py0HM25Dqj8sJNydPO4f+OzN7QtXIPlcw0mjVhxifz4IiXLpbhwI8= fed@localhost.localdomain"
+        ]
+      }
+    ]
+  },
+  "storage": {
+    "directories": [
+      {
+        "group": {
+          "name": "core"
+        },
+        "path": "/var/mnt/data",
+        "user": {
+          "name": "core"
+        },
+        "mode": 511
+      }
+    ],
+    "files": [
+      {
+        "path": "/etc/systemd/zram-generator.conf",
+        "contents": {
+          "compression": "",
+          "source": "data:;base64,IyBUaGlzIGNvbmZpZyBmaWxlIGVuYWJsZXMgYSAvZGV2L3pyYW0wIGRldmljZSB3aXRoIHRoZSBkZWZhdWx0IHNldHRpbmdzClt6cmFtMF0K"
+        },
+        "mode": 420
+      },
+      {
+        "path": "/var/lib/systemd/linger/core",
+        "mode": 420
+      },
+      {
+        "path": "/etc/ostree/auth.json",
+        "contents": {
+          "compression": "",
+          "source": "data:;base64,ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6ICJabVZrWlhoMGJUcG5hSEJmU0d4UFdrZHFUbGhwU0ZsNlUyYzNOVlJqWWtrelJYaFVhWFJxZERWcE1UQm9XamhOIgoJCX0KCX0KfQ=="
+        },
+        "mode": 384
+      },
+      {
+        "path": "/etc/hostname",
+        "contents": {
+          "compression": "",
+          "source": "data:,homeserver.local"
+        },
+        "mode": 420
+      },
+      {
+        "path": "/etc/sysctl.d/90-ipfw.conf",
+        "contents": {
+          "compression": "",
+          "source": "data:,net.ipv4.ip_forward%20%3D%201%0A"
+        }
+      },
+      {
+        "path": "/etc/NetworkManager/system-connections/eth0.nmconnection",
+        "contents": {
+          "compression": "gzip",
+          "source": "data:;base64,H4sIAAAAAAAC/zTKQa6CMBAG4P3cBd5rJUQXPQlhMXR+pEk7JTCY6OmNEnff4htiVUW0VHWkJAG2/JM9V3yETWGU1LDNHNEoF5zjVRVhPaacIg1pfXQjsciGfXfB3Xzr+mvrvG8vf76jAluqhMJ6cP72/uzNHdqUKgiCmY9svypp5ylD6B0AAP//1oUzDJ8AAAA="
+        },
+        "mode": 384
+      },
+      {
+        "path": "/etc/NetworkManager/system-connections/eth1.nmconnection",
+        "contents": {
+          "compression": "gzip",
+          "source": "data:;base64,H4sIAAAAAAAC/1SMwWqEQBAF7/0vmowxkhDmS8RDx37qgNMjM22C+/XLruzBW1EU1Y9JFaOFpAMF8bDFkR0bHoSsMApqyBOPqJQjzuKWFN7yXgxCfdj+2oFYJKMU5913U7vuq24+3+uPt6Yl0XKVPzSz4Z+Pi3YUYUsSH1l3Xp/f7vxWM7SKSeAFE++rvVIJhX9XCN0DAAD///d9QirJAAAA"
+        },
+        "mode": 384
+      }
+    ],
+    "links": [
+      {
+        "path": "/etc/localtime",
+        "target": "../usr/share/zoneinfo/Europe/Warsaw"
+      }
+    ]
+  },
+  "systemd": {
+    "units": [
+      {
+        "contents": "[Unit]\nDescription=Rebase to mediabarn-image\nConditionFirstBoot=true\nAfter=network-online.target\n\n[Install]\nWantedBy=default.target\n\n[Service]\nAfter=ignition-firstboot-complete.service\nType=oneshot\nRemainAfterExit=yes\nExecStartPre=/bin/sleep 30\nExecStartPre=systemctl disable zincati\nExecStart=rpm-ostree rebase --bypass-driver --reboot ostree-unverified-registry:ghcr.io/fedextm/homeserver:v0.4\nExecStartPost=/bin/chown 1000:1000 /var/mnt/data\nWantedBy=multi-user.target\n",
+        "enabled": true,
+        "name": "rebase.service"
+      },
+      {
+        "contents": "[Unit]\nDescription=Mount Data Volume\n\n[Mount]\nWhat=/dev/mapper/vg_data-lv_data\nWhere=/var/mnt/data\nType=ext4\nOptions=nofail,noatime,discard,errors=remount-ro\n\n[Install]\nWantedBy=multi-user.target\n",
+        "enabled": true,
+        "name": "var-mnt-data.mount"
+      }
+    ]
+  }
+}

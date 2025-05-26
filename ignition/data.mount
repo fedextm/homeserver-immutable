@@ -1,0 +1,8 @@
+[Unit]
+Description=Mount Data Volume
+[Mount]
+What=/dev/mapper/vg_data-lv_data
+Where=/var/mnt/data
+Type=ext4
+Options=nofail,noatime,discard,errors=remount-ro
+

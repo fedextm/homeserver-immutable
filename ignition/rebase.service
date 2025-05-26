@@ -1,0 +1,14 @@
+[Unit]
+Description=Rebase to mediabarn-image
+ConditionFirstBoot=true
+After=network-online.target
+[Install]
+WantedBy=default.target
+[Service]
+After=ignition-firstboot-complete.service
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=/bin/sleep 30
+ExecStartPre=systemctl disable zincati
+ExecStart=rpm-ostree rebase --bypass-driver --reboot ostree-unverified-registry:ghcr.io/fedextm/homeserver:v0.2
+WantedBy=multi-user.target

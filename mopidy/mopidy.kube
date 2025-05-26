@@ -1,0 +1,10 @@
+[Install]
+WantedBy=default.target
+
+[Kube]
+# Point to the yaml file in the same directory
+Yaml=mopidy.yml
+
+[Unit]
+Description=Mopidy Service
+
