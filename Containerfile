@@ -32,7 +32,7 @@ RUN rpm-ostree install \
         pulseaudio-utils \
         vim \
         firewalld \
-        zsh
+        fish
 
 COPY podman/registries.conf /etc/containers/registries.conf
 COPY samba/smb.conf /etc/samba/smb.conf
