@@ -1,0 +1,55 @@
+# Save the output of this file and use kubectl create -f to import
+# it into Kubernetes.
+#
+# Created with podman-5.2.2
+
+# NOTE: If you generated this yaml from an unprivileged and rootless podman container on an SELinux
+# enabled system, check the podman generate kube man page for steps to follow to ensure that your pod/container
+# has the right permissions to access the volumes added.
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: plex-pod
+  name: plex-pod
+spec:
+  containers:
+  - env:
+    - name: CHANGE_CONFIG_DIR_OWNERSHIP
+      value: "false"
+    - name: PLEX_UID
+      value: "979"
+    - name: PLEX_GID
+      value: "1001"
+    - name: ALLOWED_NETWORKS
+      value: 192.168.250.0/24
+    - name: TZ
+      value: Europe/Warsaw
+    - name: PLEX_CLAIM
+      value: claim-X
+    image: docker.io/plexinc/pms-docker:latest
+    name: plex
+    volumeMounts:
+    - mountPath: /config
+      name: plex-config
+    - mountPath: /transcode
+      name: plex-tmp
+    - mountPath: /data
+      name: plex-data
+  hostNetwork: true
+  hostname: homeserver.localhost
+  volumes:
+  - hostPath:
+      path: /data/containers-data/plex/plexmediaserver
+      type: Directory
+    name: plex-config
+  - hostPath:
+      path: /tmp
+      type: Directory
+    name: plex-tmp
+  - hostPath:
+      path: /data
+      type: Directory
+    name: plex-data
+
