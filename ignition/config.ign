@@ -45,6 +45,7 @@
     ],
     "files": [
       {
+        "overwrite": true,
         "path": "/etc/resolv.conf",
         "contents": {
           "compression": "",
