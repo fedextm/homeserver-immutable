@@ -70,6 +70,7 @@ storage:
           name: core
     files:
       - path: /etc/resolv.conf
+        overwrite: true
         mode: 0644
         contents:
           inline: |
