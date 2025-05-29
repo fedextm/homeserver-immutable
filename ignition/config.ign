@@ -22,6 +22,11 @@
         "sshAuthorizedKeys": [
           "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDerW5/oq90/fUprncOcLmQL4iuKP06d9PsGdmVBAwpcZYayyW3/or5Q6eFgAmEOfQEpKiB2NgUb8FOjhAzp9TdG/TAODRSZ2IWkov7HoFC5yzwfC+hoh01v3ioBFO0wioPC3aT6IQg7w6i3bq0vktdhhP/8lvodgKuU39UTLnD4ftJ/BB4ZIAoJySI4ce5OMulZZr79RLhsQwrm7FFb+zTPc4OpGIe0VRgynHXadCpjGQaEEP26S9Pbzi0vNxGVCPjUMbEvVU244M3ZI2PFu6Y8eBBVyeFIKcavGgwPHwzHTXZjwjZsz1P2yo1T5qsv2H5sOBvGiPda+b3J0b6Z5DYRAaGWf5oMJ1xn/Jasr/0hU2SNBwfN9Sl/qZ+GPSeFZSjqAa1t5r8fFwnifX3rVrlbk2v6YShK02IjZQ/YRmfZ7kbybchop2Sml8hmBH2686fGlOTL5/aC4py0HM25Dqj8sJNydPO4f+OzN7QtXIPlcw0mjVhxifz4IiXLpbhwI8= fed@localhost.localdomain"
         ]
+      },
+      {
+        "homeDir": "/var/mnt/data/containers_data/plex/plexmediaserver",
+        "name": "plex",
+        "shell": "/sbin/nologin"
       }
     ]
   },
@@ -39,6 +44,15 @@
       }
     ],
     "files": [
+      {
+        "overwrite": true,
+        "path": "/etc/resolv.conf",
+        "contents": {
+          "compression": "",
+          "source": "data:,%23%20Generated%20by%20NetworkManager%0Asearch%20lan%0Anameserver%20192.168.3.201%0A"
+        },
+        "mode": 420
+      },
       {
         "path": "/etc/systemd/zram-generator.conf",
         "contents": {
@@ -86,7 +100,7 @@
         "path": "/etc/NetworkManager/system-connections/eth1.nmconnection",
         "contents": {
           "compression": "gzip",
-          "source": "data:;base64,H4sIAAAAAAAC/1SMwWqEQBAF7/0vmowxkhDmS8RDx37qgNMjM22C+/XLruzBW1EU1Y9JFaOFpAMF8bDFkR0bHoSsMApqyBOPqJQjzuKWFN7yXgxCfdj+2oFYJKMU5913U7vuq24+3+uPt6Yl0XKVPzSz4Z+Pi3YUYUsSH1l3Xp/f7vxWM7SKSeAFE++rvVIJhX9XCN0DAAD///d9QirJAAAA"
+          "source": "data:;base64,H4sIAAAAAAAC/1TM0UrEMBCF4ft5l8ZNdl0UyZOUXoyd0zbQTEoyVerTixaFvTscPv5+LKoYLRUdKEmELZ7s2PCzUBVGSQ114hGdcsYpvooiWt2bQahP28dtIBapaM1H/xqcv7+48Hxx16dwI9H2f15duPg3mtnwyceD9ZRhS5GYWXdef7v3s9vN0C4XQRRMvK/2RyU1fl8h9B0AAP//j6M7Z8kAAAA="
         },
         "mode": 384
       }
@@ -101,7 +115,11 @@
   "systemd": {
     "units": [
       {
-        "contents": "[Unit]\nDescription=Rebase to mediabarn-image\nConditionFirstBoot=true\nAfter=network-online.target\n\n[Install]\nWantedBy=default.target\n\n[Service]\nAfter=ignition-firstboot-complete.service\nType=oneshot\nRemainAfterExit=yes\nExecStartPre=/bin/sleep 30\nExecStartPre=systemctl disable zincati\nExecStart=rpm-ostree rebase --bypass-driver --reboot ostree-unverified-registry:ghcr.io/fedextm/homeserver:v0.4\nExecStartPost=/bin/chown 1000:1000 /var/mnt/data\nWantedBy=multi-user.target\n",
+        "enabled": false,
+        "name": "systemd-resolved.service"
+      },
+      {
+        "contents": "[Unit]\nDescription=Rebase to mediabarn-image\nConditionFirstBoot=true\nAfter=network-online.target\n\n[Install]\nWantedBy=default.target\n\n[Service]\nAfter=ignition-firstboot-complete.service\nType=oneshot\nRemainAfterExit=yes\nExecStartPre=/bin/sleep 30\nExecStartPre=systemctl disable zincati\nExecStart=rpm-ostree rebase --bypass-driver --reboot ostree-unverified-registry:ghcr.io/fedextm/homeserver:v0.6\nExecStartPost=/usr/bin/chown 1000:1000 /var/mnt/data\nWantedBy=multi-user.target",
         "enabled": true,
         "name": "rebase.service"
       },
