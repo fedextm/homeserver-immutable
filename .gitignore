@@ -401,4 +401,4 @@ FodyWeavers.xsd
 *.sln.iml
 
 # Disable sensitive files
-ignition/auth.json
+auth.json
