@@ -14,5 +14,4 @@ ExecStartPre=/bin/sleep 30
 ExecStartPre=systemctl disable zincati
 ExecStart=rpm-ostree rebase --bypass-driver --reboot ostree-unverified-registry:ghcr.io/fedextm/homeserver:v0.6
 ExecStartPost=/usr/bin/chown 1000:1000 /var/mnt/data
-ExecStartPost=/usr/bin/usermod -s /usr/bin/fish core
 WantedBy=multi-user.target
