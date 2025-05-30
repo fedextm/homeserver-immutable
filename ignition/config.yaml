@@ -22,9 +22,9 @@ systemd:
   units:
     - name: systemd-resolved.service
       enabled: false
-    - name: rebase.service
-      enabled: true
-      contents_local: rebase.service
+    # - name: rebase.service
+    #   enabled: true
+    #   contents_local: rebase.service
     - name: var-mnt-data.mount
       enabled: true
       contents_local: data.mount
@@ -41,7 +41,6 @@ storage:
           name: core
     files:
       - path: /etc/systemd/journald.conf
-        overwrite: true
         mode: 0644
         contents:
           local: journald.conf

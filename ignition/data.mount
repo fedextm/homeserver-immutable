@@ -5,7 +5,7 @@ Description=Mount Data Volume
 What=/dev/mapper/vg_data-lv_data
 Where=/var/mnt/data
 Type=ext4
-Options=nofail,noatime,discard,errors=remount-ro
+Options=nofail,noatime,discard,gid=1000,uid=1000,errors=remount-ro
 
 [Install]
 WantedBy=multi-user.target

@@ -45,7 +45,6 @@
     ],
     "files": [
       {
-        "overwrite": true,
         "path": "/etc/systemd/journald.conf",
         "contents": {
           "compression": "gzip",
