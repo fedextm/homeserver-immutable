@@ -27,18 +27,7 @@ systemd:
       contents_local: rebase.service
     - name: var-mnt-data.mount
       enabled: true
-      contents: |
-        [Unit]
-        Description=Mount Data Volume
-        
-        [Mount]
-        What=/dev/mapper/vg_data-lv_data
-        Where=/var/mnt/data
-        Type=ext4
-        Options=nofail,noatime,discard,errors=remount-ro
-
-        [Install]
-        WantedBy=multi-user.target
+      contents_local: data.mount
 storage:
     links:
       - path: /etc/localtime
@@ -51,6 +40,11 @@ storage:
         group:
           name: core
     files:
+      - path: /etc/systemd/journald.conf
+        overwrite: true
+        mode: 0644
+        contents:
+          local: journald.conf
       - path: /etc/resolv.conf
         overwrite: true
         mode: 0644
@@ -69,8 +63,8 @@ storage:
         mode: 0644
       - path: /etc/ostree/auth.json
         mode: 0600
-        contents: 
-          local: auth.json
+        contents:
+          local: .auth.json
       - path: /etc/hostname
         mode: 0644
         contents:
@@ -82,33 +76,9 @@ storage:
       - path: /etc/NetworkManager/system-connections/eth0.nmconnection
         mode: 0600
         contents:
-          inline: |
-            [connection]
-            id=eth0
-            type=ethernet
-            interface-name=eth0
-            zone=public
-            [ipv4]
-            address1=192.168.122.3/24
-            method=manual
-            [ipv6]
-            addr-gen-mode=default
-            method=disabled
+          local: nm/eth0.nmconnection
       - path: /etc/NetworkManager/system-connections/eth1.nmconnection
         mode: 0600
         contents:
-          inline: |
-            [connection]
-            id=eth1
-            type=ethernet
-            interface-name=eth1
-            zone=trusted
-            [ipv4]
-            address1=192.168.250.3/24
-            dns=192.168.3.201;
-            gateway=192.168.250.1
-            method=manual
-            [ipv6]
-            addr-gen-mode=default
-            method=disabled
+          local: nm/eth1.nmconnection
 
