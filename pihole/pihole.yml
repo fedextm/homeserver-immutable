@@ -30,6 +30,13 @@ spec:
       value: pihole
     image: docker.io/pihole/pihole:2025.03.0
     name: pihole
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "500m"
+      limits:
+        memory: "1Gi"
+        cpu: "4"
     securityContext:
       privileged: true
       procMount: Unmasked

@@ -14,7 +14,11 @@ spec:
     name: mopidy
     resources:
       limits:
+        memory: 1Gi
+        cpu: "1"
+      requests:
         memory: 512Mi
+        cpu: "500m"
     securityContext:
       runAsGroup: 1000
       runAsUser: 1000
