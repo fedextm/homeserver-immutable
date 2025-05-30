@@ -20,6 +20,9 @@ passwd:
       home_dir: /var/mnt/data/containers_data/plex/plexmediaserver
 systemd:
   units:
+    - name: actions-runner.service
+      enabled: true
+      contents_local: actions-runner.service
     - name: systemd-resolved.service
       enabled: false
     # - name: rebase.service
