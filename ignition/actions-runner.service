@@ -1,0 +1,14 @@
+[Unit]
+Description=GitHub Action Runner
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/var/mnt/data/actions-runner
+ExecStart=/var/mnt/data/actions-runner/bin/runsvc.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

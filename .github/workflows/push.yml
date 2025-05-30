@@ -1,0 +1,28 @@
+name: Build and Push Image
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: [self-hosted, Linux] # Uses your private runner
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        env:
+          REGISTRY: ghcr.io
+          USERNAME: ${{ github.actor }}
+          PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "${PASSWORD}" | podman login $REGISTRY -u $USERNAME --password-stdin
+
+      - name: Build image with Podman
+        run: |
+          podman build -t ghcr.io/fedextm/homeserver:v0.7 -f ./Containerfile .
+
+      - name: Push image to GHCR
+        run: |
+          podman push ghcr.io/fedextm/homeserver:v0.7

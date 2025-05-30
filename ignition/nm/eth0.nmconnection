@@ -1,0 +1,11 @@
+            [connection]
+            id=eth0
+            type=ethernet
+            interface-name=eth0
+            zone=public
+            [ipv4]
+            address1=192.168.122.3/24
+            method=manual
+            [ipv6]
+            addr-gen-mode=default
+            method=disabled
