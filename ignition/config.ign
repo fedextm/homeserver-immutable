@@ -127,12 +127,7 @@
         "name": "systemd-resolved.service"
       },
       {
-        "contents": "[Unit]\nDescription=Rebase to main image\nConditionFirstBoot=true\nAfter=network-online.target\n\n[Install]\nWantedBy=default.target\n\n[Service]\nType=oneshot\nRemainAfterExit=yes\nExecStartPre=/bin/sleep 30\nExecStartPre=systemctl disable zincati\nExecStart=rpm-ostree rebase --bypass-driver --reboot ostree-unverified-registry:ghcr.io/fedextm/homeserver:v0.6\nExecStartPost=/usr/bin/chown 1000:1000 /var/mnt/data\n",
-        "enabled": true,
-        "name": "rebase.service"
-      },
-      {
-        "contents": "[Unit]\nDescription=Mount Data Volume\n\n[Mount]\nWhat=/dev/mapper/vg_data-lv_data\nWhere=/var/mnt/data\nType=ext4\nOptions=nofail,noatime,discard,errors=remount-ro\n\n[Install]\nWantedBy=multi-user.target",
+        "contents": "[Unit]\nDescription=Mount Data Volume\n\n[Mount]\nWhat=/dev/mapper/vg_data-lv_data\nWhere=/var/mnt/data\nType=ext4\nOptions=nofail,noatime,discard,gid=1000,uid=1000,errors=remount-ro\n\n[Install]\nWantedBy=multi-user.target",
         "enabled": true,
         "name": "var-mnt-data.mount"
       }
