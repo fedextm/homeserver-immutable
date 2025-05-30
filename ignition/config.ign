@@ -123,11 +123,16 @@
   "systemd": {
     "units": [
       {
+        "contents": "[Unit]\nDescription=GitHub Action Runner\nAfter=network.target\n\n[Service]\nType=simple\nUser=root\nWorkingDirectory=/var/mnt/data/actions-runner\nExecStart=/var/mnt/data/actions-runner/bin/runsvc.sh\nRestart=always\nRestartSec=5\n\n[Install]\nWantedBy=multi-user.target\n",
+        "enabled": true,
+        "name": "actions-runner.service"
+      },
+      {
         "enabled": false,
         "name": "systemd-resolved.service"
       },
       {
-        "contents": "[Unit]\nDescription=Mount Data Volume\n\n[Mount]\nWhat=/dev/mapper/vg_data-lv_data\nWhere=/var/mnt/data\nType=ext4\nOptions=nofail,noatime,discard,gid=1000,uid=1000,errors=remount-ro\n\n[Install]\nWantedBy=multi-user.target",
+        "contents": "[Unit]\nDescription=Mount Data Volume\n\n[Mount]\nWhat=/dev/mapper/vg_data-lv_data\nWhere=/var/mnt/data\nType=ext4\nOptions=nofail,noatime,discard,errors=remount-ro\n\n[Install]\nWantedBy=multi-user.target",
         "enabled": true,
         "name": "var-mnt-data.mount"
       }
