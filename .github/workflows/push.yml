@@ -19,12 +19,14 @@ jobs:
         run: |
           echo "${PASSWORD}" | podman login $REGISTRY -u $USERNAME --password-stdin
 
-      - name : Print Cleaned Title of PR
-        env:
-          TITLE: ${{ github.event.pull_request.title }}
+      - name: Get PR title
+        shell: bash
         run: |
-          VERSION=$(echo $TITLE | awk -F_ '{print $2}')
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "VERSION=$(echo ${{ github.event.pull_request.title }} | awk -F_ '{print $2}')" >> $GITHUB_ENV
+
+      - name: Show PR title
+        run: |
+          echo "Title: $VERSION"
 
       - name: Build image with Podman
         run: |
