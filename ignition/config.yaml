@@ -3,9 +3,9 @@ version: 1.6.0
 kernel_arguments:
   should_exist:
     - mitigations=off
-    - net.ifnames=0 
+    - net.ifnames=0
     - biosdevname=0  
-    - selinux=0  
+    - selinux=0
     - audit=0
   should_not_exist:
     - mitigations=auto,nosmt
@@ -16,7 +16,7 @@ passwd:
         - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDerW5/oq90/fUprncOcLmQL4iuKP06d9PsGdmVBAwpcZYayyW3/or5Q6eFgAmEOfQEpKiB2NgUb8FOjhAzp9TdG/TAODRSZ2IWkov7HoFC5yzwfC+hoh01v3ioBFO0wioPC3aT6IQg7w6i3bq0vktdhhP/8lvodgKuU39UTLnD4ftJ/BB4ZIAoJySI4ce5OMulZZr79RLhsQwrm7FFb+zTPc4OpGIe0VRgynHXadCpjGQaEEP26S9Pbzi0vNxGVCPjUMbEvVU244M3ZI2PFu6Y8eBBVyeFIKcavGgwPHwzHTXZjwjZsz1P2yo1T5qsv2H5sOBvGiPda+b3J0b6Z5DYRAaGWf5oMJ1xn/Jasr/0hU2SNBwfN9Sl/qZ+GPSeFZSjqAa1t5r8fFwnifX3rVrlbk2v6YShK02IjZQ/YRmfZ7kbybchop2Sml8hmBH2686fGlOTL5/aC4py0HM25Dqj8sJNydPO4f+OzN7QtXIPlcw0mjVhxifz4IiXLpbhwI8= fed@localhost.localdomain
       password_hash: $y$j9T$KBYCUm.3CT4/GE.MH0bWi/$ld9p.8ZzLBFRBhhde7RmKCtOvRlxl1NwyteIADPZij/
     - name: plex
-      shell: /sbin/nologin    
+      shell: /sbin/nologin
       home_dir: /var/mnt/data/containers_data/plex/plexmediaserver
 systemd:
   units:

@@ -1,0 +1,22 @@
+name: Post-Merge CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'ignition/**'
+
+jobs:
+  post-merge:
+    runs-on: [self-hosted, Linux]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run post-merge tasks
+        run: |
+          coreos-installer iso customize --dest-device /dev/vda \
+          --dest-ignition ignition/config.ign \
+          -o /var/mnt/data/isos/fedora-coreos-42-customized-live_v08.iso /var/mnt/data/isos/fedora-coreos-42.20250410.3.2-live-iso.x86_64.iso

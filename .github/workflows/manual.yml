@@ -1,0 +1,34 @@
+name: Manual Run Example
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Print version to rebase (without v prefix)'
+        required: true
+        type: string
+      confirm:
+        description: |
+          Please confirm this action with message : 'Apply'
+        required: true
+jobs:
+  failsafe:
+    if: github.event.inputs.confirm != 'Apply'
+    name: Failsafe event
+    runs-on: [self-hosted, Linux]
+    steps:
+      - name: Failsafe message
+        run: |
+          echo "WARNING!! Workflow run skipped. Please confirm the action before triggering this workflow"
+      - name: Force failure
+        run: exit 1
+
+  Apply:
+    runs-on: [self-hosted, Linux]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run a custom command
+        run: |
+          rpm-ostree rebase --bypass-driver --reboot ostree-unverified-registry:ghcr.io/fedextm/homeserver:v${{ inputs.version }}

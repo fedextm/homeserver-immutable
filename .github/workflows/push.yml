@@ -19,10 +19,17 @@ jobs:
         run: |
           echo "${PASSWORD}" | podman login $REGISTRY -u $USERNAME --password-stdin
 
+      - name : Print Cleaned Title of PR
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          VERSION=$(echo $TITLE | awk -F_ '{print $2}')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
       - name: Build image with Podman
         run: |
-          podman build -t ghcr.io/fedextm/homeserver:v0.7 -f ./Containerfile .
+          podman build --volume /var/mnt/data:/data -t ghcr.io/fedextm/homeserver:v${{ env.VERSION }} -f ./Containerfile .
 
       - name: Push image to GHCR
         run: |
-          podman push ghcr.io/fedextm/homeserver:v0.7
+          podman push ghcr.io/fedextm/homeserver:v${{ env.VERSION }}
