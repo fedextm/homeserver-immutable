@@ -3,6 +3,9 @@ name: Build and Push Image
 on:
   push:
 
+permissions:
+  packages: write
+
 jobs:
   build:
     runs-on: [self-hosted, Linux] # Uses your private runner
