@@ -2,20 +2,18 @@ FROM quay.io/fedora/fedora-coreos:stable
 
 RUN rpm-ostree override remove \
         nfs-utils-coreos \
-        audit  
-
-RUN mkdir /etc/transmission
-RUN mkdir /etc/mopidy
+        audit
 
 COPY mopidy/mopidy.kube /etc/containers/systemd/users/1000/mopidy.kube
 COPY mopidy/mopidy.yml /etc/containers/systemd/users/1000/mopidy.yml
+COPY mopidy/config/mopidy.conf /data/containers_data/mopidy/config/mopidy.conf
 
 COPY transmission/transmission.kube /etc/containers/systemd/users/1000/transmission.kube
 COPY transmission/transmission.yml /etc/containers/systemd/users/1000/transmission.yml
+COPY transmission/config/settings.json /data/containers_data/transmission/config/settings.json
 
 COPY pihole/pihole.yml /etc/containers/systemd/pihole.yml
 COPY pihole/pihole.kube /etc/containers/systemd/pihole.kube
-
 
 COPY plex/plex.yml /etc/containers/systemd/plex.yml
 COPY plex/plex.kube /etc/containers/systemd/plex.kube
@@ -32,6 +30,7 @@ RUN rpm-ostree install \
         pulseaudio-utils \
         vim \
         firewalld \
+        wget \
         fish
 
 COPY podman/registries.conf /etc/containers/registries.conf

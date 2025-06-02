@@ -45,6 +45,14 @@
     ],
     "files": [
       {
+        "path": "/etc/systemd/journald.conf",
+        "contents": {
+          "compression": "gzip",
+          "source": "data:;base64,H4sIAAAAAAAC/1yRzW7iMBSF934NPwBhhpFm40WLBGohUhVTVVXVhRufBkv+iewbSvr0lUOAlF3y3Z9z7vHbY+iiV/adSQpRNRAtYjKJ4InJPhFcqY7PCeJPsb6ClbGQ5htisWZ3nTYkfGB8GVwbkZLokRiXUHb8aq2hMmiIzmjGZe/rB0+IB2UlavHPMV4pwtY4Q9PC3yJNKvddTCTmRVEUeUd2sgHaVQTEGYzWUm5jvOo8GYfxgMv/ZOracbnoFo67SnWskFMxwWdvAxmGUIu5C572jK9C/FJR74Lskw3NEMqFbcp0Q5bBp2DxG74oO8a2270+KdqLmcZhVp96B9ktDrD5vSA0PrpmAk+6N3RUJlNP5s/ixn+GKx3U4RAbxrfG5xDE4v+G8QpKD3uytZ8AAAD//7QzZ1A2AgAA"
+        },
+        "mode": 420
+      },
+      {
         "overwrite": true,
         "path": "/etc/resolv.conf",
         "contents": {
@@ -92,7 +100,7 @@
         "path": "/etc/NetworkManager/system-connections/eth0.nmconnection",
         "contents": {
           "compression": "gzip",
-          "source": "data:;base64,H4sIAAAAAAAC/zTKQa6CMBAG4P3cBd5rJUQXPQlhMXR+pEk7JTCY6OmNEnff4htiVUW0VHWkJAG2/JM9V3yETWGU1LDNHNEoF5zjVRVhPaacIg1pfXQjsciGfXfB3Xzr+mvrvG8vf76jAluqhMJ6cP72/uzNHdqUKgiCmY9svypp5ylD6B0AAP//1oUzDJ8AAAA="
+          "source": "data:;base64,H4sIAAAAAAAC/2yNwQ6CMAyG7zyFLwC6SYge9iTEQ1l/ZMnWESgm+vTGGwv2+PXr19Nuep9F4DVkeVT7RWAHnS4F0/eMH8Ui0NIWxTKSRy2UcLz8ZIGbtyEGX/A+zK+2fEzMC9bVOHO3jelujbG2uZ5tW1gJOmV2iWSjeEh2x2T9hNQpMxxjpC3qvxyHlYYIrr4BAAD//+bWnfUjAQAA"
         },
         "mode": 384
       },
@@ -100,7 +108,7 @@
         "path": "/etc/NetworkManager/system-connections/eth1.nmconnection",
         "contents": {
           "compression": "gzip",
-          "source": "data:;base64,H4sIAAAAAAAC/1TM0UrEMBCF4ft5l8ZNdl0UyZOUXoyd0zbQTEoyVerTixaFvTscPv5+LKoYLRUdKEmELZ7s2PCzUBVGSQ114hGdcsYpvooiWt2bQahP28dtIBapaM1H/xqcv7+48Hxx16dwI9H2f15duPg3mtnwyceD9ZRhS5GYWXdef7v3s9vN0C4XQRRMvK/2RyU1fl8h9B0AAP//j6M7Z8kAAAA="
+          "source": "data:;base64,H4sIAAAAAAAC/2yOQU7DMBBF9zkFF4ip3VKBkE9SsRgyv4mleBzZE1A4PWKDMkq9/P/5z3vavdtQRDBoKvLR7YvEETp5k+m24C9FFailRVHvNKAXyjj+/CmCqHVtCjbFLS1fF3uZmCta89G/Beevry68nNz5OVwMxdL+gbMLJ/9u6pEU37SZDauUoVPhmElWmg9O16NTP0L6XBiRcad11kdznBp9zuCu+w0AAP//W57t3mYBAAA="
         },
         "mode": 384
       }
@@ -115,16 +123,16 @@
   "systemd": {
     "units": [
       {
+        "contents": "[Unit]\nDescription=GitHub Action Runner\nAfter=network.target\n\n[Service]\nType=simple\nUser=root\nWorkingDirectory=/var/mnt/data/actions-runner\nExecStart=/var/mnt/data/actions-runner/bin/runsvc.sh\nRestart=always\nRestartSec=5\n\n[Install]\nWantedBy=multi-user.target\n",
+        "enabled": true,
+        "name": "actions-runner.service"
+      },
+      {
         "enabled": false,
         "name": "systemd-resolved.service"
       },
       {
-        "contents": "[Unit]\nDescription=Rebase to mediabarn-image\nConditionFirstBoot=true\nAfter=network-online.target\n\n[Install]\nWantedBy=default.target\n\n[Service]\nAfter=ignition-firstboot-complete.service\nType=oneshot\nRemainAfterExit=yes\nExecStartPre=/bin/sleep 30\nExecStartPre=systemctl disable zincati\nExecStart=rpm-ostree rebase --bypass-driver --reboot ostree-unverified-registry:ghcr.io/fedextm/homeserver:v0.6\nExecStartPost=/usr/bin/chown 1000:1000 /var/mnt/data\nWantedBy=multi-user.target",
-        "enabled": true,
-        "name": "rebase.service"
-      },
-      {
-        "contents": "[Unit]\nDescription=Mount Data Volume\n\n[Mount]\nWhat=/dev/mapper/vg_data-lv_data\nWhere=/var/mnt/data\nType=ext4\nOptions=nofail,noatime,discard,errors=remount-ro\n\n[Install]\nWantedBy=multi-user.target\n",
+        "contents": "[Unit]\nDescription=Mount Data Volume\n\n[Mount]\nWhat=/dev/mapper/vg_data-lv_data\nWhere=/var/mnt/data\nType=ext4\nOptions=nofail,noatime,discard,errors=remount-ro\n\n[Install]\nWantedBy=multi-user.target",
         "enabled": true,
         "name": "var-mnt-data.mount"
       }

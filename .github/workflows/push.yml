@@ -1,0 +1,45 @@
+name: Build and Push Image
+
+on:
+  push:
+
+jobs:
+  build:
+    name: Build and Push Image
+    runs-on: [self-hosted, Linux] # Uses your private runner
+    permissions:
+      packages: write
+      contents: read
+      attestations: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        env:
+          REGISTRY: ghcr.io
+          USERNAME: ${{ github.actor }}
+          PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "${PASSWORD}" | podman login $REGISTRY -u $USERNAME --password-stdin
+
+      - name: Get PR title
+        shell: bash
+        run: |
+          BRANCH="${GITHUB_REF_NAME}"
+          NUMBERS=$(echo "$BRANCH" | awk -F_ '{print $2}')
+          echo "VERSION=$NUMBERS" >> $GITHUB_ENV
+
+      - name: Show PR title
+        run: |
+          echo "Title: $VERSION"
+
+      - name: Build image with Podman
+        run: |
+          podman build --volume /var/mnt/data:/data -t ghcr.io/fedextm/homeserver:v${{ env.VERSION }} -f ./Containerfile .
+
+      - name: Push image to GHCR
+        run: |
+          podman push ghcr.io/fedextm/homeserver:v${{ env.VERSION }}
