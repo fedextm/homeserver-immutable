@@ -22,7 +22,9 @@ jobs:
       - name: Get PR title
         shell: bash
         run: |
-          echo "VERSION=${{ github.event.pull_request.title }}" >> $GITHUB_ENV
+          BRANCH="${GITHUB_REF_NAME}"
+          NUMBERS=$(echo "$BRANCH" | awk -F_ '{print $2}')
+          echo "VERSION=$NUMBERS" >> $GITHUB_ENV
 
       - name: Show PR title
         run: |
