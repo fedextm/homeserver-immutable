@@ -3,12 +3,15 @@ name: Build and Push Image
 on:
   push:
 
-permissions:
-  packages: write
-
 jobs:
   build:
+    name: Build and Push Image
     runs-on: [self-hosted, Linux] # Uses your private runner
+    permissions:
+      packages: write
+      contents: read
+      attestations: write
+      id-token: write
 
     steps:
       - name: Checkout repository
