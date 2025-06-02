@@ -6,11 +6,11 @@ RUN rpm-ostree override remove \
 
 COPY mopidy/mopidy.kube /etc/containers/systemd/users/1000/mopidy.kube
 COPY mopidy/mopidy.yml /etc/containers/systemd/users/1000/mopidy.yml
-COPY mopidy/mopidy.conf /data/contaiers_data/mopidy/config/mopidy.conf
+COPY mopidy/mopidy.conf /data/containers_data/mopidy/config/mopidy.conf
 
 COPY transmission/transmission.kube /etc/containers/systemd/users/1000/transmission.kube
 COPY transmission/transmission.yml /etc/containers/systemd/users/1000/transmission.yml
-COPY transmission/settings.json /data/contaiers_data/transmission/config/settings.json
+COPY transmission/settings.json /data/containers_data/transmission/config/settings.json
 
 COPY pihole/pihole.yml /etc/containers/systemd/pihole.yml
 COPY pihole/pihole.kube /etc/containers/systemd/pihole.kube
