@@ -31,4 +31,4 @@ jobs:
 
       - name: Run a custom command
         run: |
-          rpm-ostree rebase --bypass-driver --reboot ostree-unverified-registry:ghcr.io/fedextm/homeserver:v${{ inputs.version }}
+          rpm-ostree rebase --bypass-driver ostree-unverified-registry:ghcr.io/fedextm/homeserver:v${{ inputs.version }}

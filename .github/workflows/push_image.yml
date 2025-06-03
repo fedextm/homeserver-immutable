@@ -1,7 +1,9 @@
-name: Build and Push Image
+name: Push Image to GHCR
 
 on:
   push:
+    branches:
+      - main
 
 jobs:
   build:
@@ -36,10 +38,7 @@ jobs:
         run: |
           echo "Title: $VERSION"
 
-      - name: Build image with Podman
-        run: |
-          podman build --volume /var/mnt/data:/data -t ghcr.io/fedextm/homeserver:v${{ env.VERSION }} -f ./Containerfile .
-
       - name: Push image to GHCR
         run: |
           podman push ghcr.io/fedextm/homeserver:v${{ env.VERSION }}
+          
