@@ -1,4 +1,4 @@
-name: Post-Merge CI
+name: Build ISO from Ignition Config
 
 on:
   push:
@@ -17,6 +17,6 @@ jobs:
 
       - name: Run post-merge tasks
         run: |
-          coreos-installer iso customize --dest-device /dev/vda \
+          coreos-installer iso customize --force --dest-device /dev/vda \
           --dest-ignition ignition/config.ign \
-          -o /var/mnt/data/isos/fedora-coreos-42-customized-live_v08.iso /var/mnt/data/isos/fedora-coreos-42.20250410.3.2-live-iso.x86_64.iso
+          -o /var/mnt/data/isos/fedora-coreos-42-customized-live.iso /var/mnt/data/isos/fedora-coreos-42.20250512.3.0-live-iso.x86_64.iso
