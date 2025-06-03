@@ -10,7 +10,7 @@ metadata:
     io.podman.annotations.userns: "keep-id"
 spec:
   containers:
-  - image: ghcr.io/fedextm/mopidy:v1.3.11
+  - image: ghcr.io/fedextm/mopidy:v2.0.1
     name: mopidy
     resources:
       limits:
