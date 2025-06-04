@@ -41,7 +41,8 @@ COPY firewall/public.xml /etc/firewalld/zones/public.xml
 COPY sound/pipewire.conf /etc/pipewire/pipewire.conf
 COPY sound/pipewire-pulse.conf /etc/pipewire/pipewire-pulse.conf
 COPY sound/org.freedesktop.RealtimeKit1.policy /usr/share/polkit-1/rules.d/org.freedesktop.RealtimeKit1.policy
-RUN systemctl enable --global pipewire.service pipewire-pulse.service
-RUN systemctl enable smb.service nmb.service nfs-server.service cockpit.socket firewalld.service && \
-    ostree container commit
+
+RUN systemctl enable --global pipewire.service pipewire-pulse.service && \
+        systemctl enable smb.service nmb.service nfs-server.service cockpit.socket firewalld.service && \
+        ostree container commit
 

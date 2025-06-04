@@ -3,8 +3,8 @@ apiVersion: v1
 kind: Pod
 metadata:
   labels:
-    app: transmission-pod
-  name: transmission-pod
+    app: transmission
+  name: transmission
   annotations:
     io.podman.annotations.userns: "keep-id" 
 spec:
@@ -14,10 +14,10 @@ spec:
     resources:
       limits:
         memory: 512Mi
-        cpu: "1"
-      requests:
-        memory: 512Mi
         cpu: "500m"
+      requests:
+        memory: 256Mi
+        cpu: "250m"
     securityContext:
       runAsGroup: 1000
       runAsUser: 1000

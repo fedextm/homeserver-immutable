@@ -14,17 +14,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Get PR title
-        shell: bash
-        run: |
-          BRANCH="${GITHUB_REF_NAME}"
-          NUMBERS=$(echo "$BRANCH" | awk -F_ '{print $2}')
-          echo "VERSION=$NUMBERS" >> $GITHUB_ENV
-
-      - name: Show PR title
-        run: |
-          echo "Title: $VERSION"
-
       - name: Build image with Podman
         run: |
-          podman build --volume /var/mnt/data:/data -t ghcr.io/fedextm/homeserver:v${{ env.VERSION }} -f ./Containerfile .
+          podman build --volume /var/mnt/data:/data -t local/fedextm/homeserver:default -f ./Containerfile .
