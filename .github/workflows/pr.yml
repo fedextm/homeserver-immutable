@@ -1,13 +1,23 @@
-name: Build and Push Image
+name: Build Image
 
 on:
   pull_request:
     branches:
       - main
+    paths:
+      - 'Containerfile'
+      - 'mopidy/**'
+      - 'plex/**'
+      - 'pihole/**'
+      - 'samba/**'
+      - 'podman/**'
+      - 'sound/**'
+      - 'transmission/**'
+      - 'nfs/**'
 
 jobs:
   build:
-    name: Build and Push Image
+    name: Build Image
     runs-on: [self-hosted, Linux] # Uses your private runner
 
     steps:
