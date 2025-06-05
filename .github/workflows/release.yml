@@ -20,6 +20,15 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Log in to GHCR
+        env:
+          REGISTRY: ghcr.io
+          USERNAME: ${{ github.actor }}
+          PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          echo "${PASSWORD}" | podman login $REGISTRY -u $USERNAME --password-stdin
+
       - name: Set up Git user
         run: |
           git config --global user.name '${{ env.GITHUB_USER }}'
