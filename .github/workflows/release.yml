@@ -1,0 +1,65 @@
+name: Push Image to GHCR
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Push Image and Create Tag
+    runs-on: [self-hosted, Linux] # Uses your private runner
+    permissions:
+      packages: write
+      contents: read
+      attestations: write
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Git user
+        run: |
+          git config --global user.name '${{ env.GITHUB_USER }}'
+          git config --global user.email '${{ env.GITHUB_USER_EMAIL }}'
+          git remote -v
+
+      - name: Determine next tag
+        id: next_tag
+        run: |
+          latest=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)
+          echo "Latest tag: $latest"
+          if [[ "$latest" == "" ]]; then
+            next="v1.0.0"
+          else
+            base=${latest%.*}
+            patch=${latest##*.}
+            next="$base.$((patch + 1))"
+          fi
+          echo "NEXT_TAG=$next" >> $GITHUB_ENV
+          echo "tag=$next" >> $GITHUB_OUTPUT
+
+      - name: Create Git tag
+        run: |
+          git tag ${{ env.NEXT_TAG }}
+          git push origin ${{ env.NEXT_TAG }}
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          latest_tag=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sed -n 2p)
+          if [[ "$latest_tag" == "" ]]; then
+            git log --pretty=format:"* %s" > CHANGELOG.md
+          else
+            git log ${latest_tag}..HEAD --pretty=format:"* %s" > CHANGELOG.md
+          fi
+          echo "Changelog generated:"
+          cat CHANGELOG.md
+
+      - name: Push image to GHCR
+        run: |
+          podman tag local/fedextm/homeserver:default ghcr.io/fedextm/homeserver:v${{ env.NEXT_TAG }}
+          podman push ghcr.io/fedextm/homeserver:v${{ env.NEXT_TAG }}
+          podman rmi local/fedextm/homeserver:default
