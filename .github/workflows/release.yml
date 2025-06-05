@@ -71,5 +71,5 @@ jobs:
       - name: Push image to GHCR
         run: |
           podman tag local/fedextm/homeserver:default ghcr.io/fedextm/homeserver:v${{ env.NEXT_TAG }}
-          podman push ghcr.io/fedextm/homeserver:v${{ env.NEXT_TAG }}
+          podman push ghcr.io/fedextm/homeserver:${{ env.NEXT_TAG }}
           podman rmi local/fedextm/homeserver:default
