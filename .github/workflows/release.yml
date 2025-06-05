@@ -5,15 +5,16 @@ on:
     branches:
       - main
 
+permissions:
+  packages: write
+  contents: write
+  attestations: write
+  id-token: write
+
 jobs:
   build:
     name: Push Image and Create Tag
     runs-on: [self-hosted, Linux] # Uses your private runner
-    permissions:
-      packages: write
-      contents: read
-      attestations: write
-      id-token: write
 
     steps:
       - uses: actions/checkout@v4
