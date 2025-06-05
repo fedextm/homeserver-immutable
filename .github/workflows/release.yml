@@ -5,20 +5,30 @@ on:
     branches:
       - main
 
+permissions:
+  packages: write
+  contents: write
+  attestations: write
+  id-token: write
+
 jobs:
   build:
     name: Push Image and Create Tag
     runs-on: [self-hosted, Linux] # Uses your private runner
-    permissions:
-      packages: write
-      contents: read
-      attestations: write
-      id-token: write
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Log in to GHCR
+        env:
+          REGISTRY: ghcr.io
+          USERNAME: ${{ github.actor }}
+          PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          echo "${PASSWORD}" | podman login $REGISTRY -u $USERNAME --password-stdin
 
       - name: Set up Git user
         run: |
