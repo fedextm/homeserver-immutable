@@ -33,10 +33,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Build image with Podman
         run: |
-          podman tag local/fedextm/homeserver:pr-${{ github.event.pull_request.number }} ghcr.io/fedextm/homeserver:${{ needs.version.outputs.version }}
+          podman tag fedextm/homeserver:latest ghcr.io/fedextm/homeserver:${{ needs.version.outputs.version }}
 
       - name: Push Docker image
         run: |
-          podman push ghcr.io/fedextm/homeserver:${{ needs.version.outputs.version }}      
+          podman push ghcr.io/fedextm/homeserver:${{ needs.version.outputs.version }} 
