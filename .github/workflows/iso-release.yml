@@ -7,8 +7,18 @@ on:
     paths:
       - 'ignition/**'
 
+permissions:
+  packages: write
+  contents: write
+  attestations: write
+  id-token: write
+
 jobs:
-  post-merge:
+  version:
+    uses: ./.github/workflows/version-bump.yml
+
+  iso:
+    needs: version  
     runs-on: [self-hosted, Linux]
 
     steps:
@@ -20,3 +30,12 @@ jobs:
           coreos-installer iso customize --force --dest-device /dev/vda \
           --dest-ignition ignition/config.ign \
           -o /var/mnt/data/isos/fedora-coreos-42-customized-live.iso /var/mnt/data/isos/fedora-coreos-42.20250512.3.0-live-iso.x86_64.iso
+
+      - name: Upload ISO to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.version.outputs.version }}
+          files: /var/mnt/data/isos/fedora-coreos-42-customized-live.iso
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                    
