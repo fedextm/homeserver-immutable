@@ -1,0 +1,42 @@
+name: Build Image
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Containerfile'
+      - 'mopidy/**'
+      - 'plex/**'
+      - 'pihole/**'
+      - 'samba/**'
+      - 'podman/**'
+      - 'sound/**'
+      - 'transmission/**'
+      - 'nfs/**'
+
+permissions:
+  packages: write
+  contents: write
+  attestations: write
+  id-token: write
+
+jobs:
+  version:
+    uses: ./.github/workflows/version-bump.yml
+
+  image:
+    needs: version  
+    runs-on: [self-hosted, Linux]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build image with Podman
+        run: |
+          podman tag local/fedextm/homeserver:pr-${{ github.event.pull_request.number }} ghcr.io/fedextm/homeserver:${{ needs.version.outputs.version }}
+
+      - name: Push Docker image
+        run: |
+          podman push ghcr.io/fedextm/homeserver:${{ needs.version.outputs.version }}      

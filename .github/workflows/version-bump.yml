@@ -1,0 +1,70 @@
+# .github/workflows/version-bump.yml
+name: Version Bump & Changelog Generator (Autodetect)
+
+on:
+  workflow_call:
+    outputs:
+      version:
+        value: ${{ jobs.tag.outputs.version }}
+
+permissions:
+  packages: write
+  contents: write
+  attestations: write
+  id-token: write
+
+jobs:
+  tag:
+    runs-on: [self-hosted, Linux] # Uses your private runner
+
+    outputs:
+      version: ${{ steps.setver.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect bump level from commit message
+        id: detect
+        run: |
+          msg=$(git log -1 --pretty=%B)
+          if [[ "$msg" == *"[bump:major]"* ]]; then
+            echo "BUMP=major" >> $GITHUB_ENV
+          elif [[ "$msg" == *"[bump:minor]"* ]]; then
+            echo "BUMP=minor" >> $GITHUB_ENV
+          else
+            echo "BUMP=patch" >> $GITHUB_ENV
+          fi
+
+      - name: Get latest tag
+        run: |
+          echo "LATEST_TAG=$(git tag --sort=-v:refname | grep '^v' | head -n1)" >> $GITHUB_ENV
+
+      - name: Bump version
+        id: setver
+        run: |
+          latest="${{ env.LATEST_TAG }}"
+          [ -z "$latest" ] && latest="v0.0.0"
+
+          IFS='.' read -r major minor patch <<< "${latest#v}"
+          case "$BUMP" in
+            major) major=$((major + 1)); minor=0; patch=0 ;;
+            minor) minor=$((minor + 1)); patch=0 ;;
+            patch) patch=$((patch + 1)) ;;
+          esac
+
+          new="v${major}.${minor}.${patch}"
+          echo "version=$new" >> $GITHUB_OUTPUT
+          echo "VERSION=$new" >> $GITHUB_ENV
+
+      - name: Generate changelog
+        run: |
+          git log "$(git describe --tags --abbrev=0)..HEAD" --oneline > changelog.txt
+
+      - name: Create tag
+        run: |
+          git config user.name '${{ env.GITHUB_USER }}'
+          git config user.email '${{ env.GITHUB_USER_EMAIL }}'
+          git tag "$VERSION"
+          git push origin "$VERSION"
