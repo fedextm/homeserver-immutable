@@ -26,4 +26,4 @@ jobs:
 
       - name: Build image with Podman
         run: |
-          podman build --volume /var/mnt/data:/data -t local/fedextm/homeserver:pr-${{ github.event.pull_request.number }} -f ./Containerfile .
+          podman build --volume /var/mnt/data:/data -t fedextm/homeserver:latest -f ./Containerfile .
