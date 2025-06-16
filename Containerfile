@@ -45,4 +45,3 @@ COPY sound/org.freedesktop.RealtimeKit1.policy /usr/share/polkit-1/rules.d/org.f
 RUN systemctl enable --global pipewire.service pipewire-pulse.service && \
         systemctl enable smb.service nmb.service nfs-server.service cockpit.socket firewalld.service && \
         ostree container commit
-

@@ -11,4 +11,3 @@
             [ipv6]
             addr-gen-mode=default
             method=disabled
-

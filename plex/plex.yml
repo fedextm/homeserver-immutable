@@ -7,48 +7,47 @@ metadata:
   name: plex
 spec:
   containers:
-  - env:
-    - name: CHANGE_CONFIG_DIR_OWNERSHIP
-      value: "false"
-    - name: PLEX_UID
-      value: "1001"
-    - name: PLEX_GID
-      value: "1001"
-    - name: ALLOWED_NETWORKS
-      value: 192.168.250.0/24
-    - name: TZ
-      value: Europe/Warsaw
-    - name: PLEX_CLAIM
-      value: claim-X
-    image: docker.io/plexinc/pms-docker:latest
-    name: plex
-    resources:
-      requests:
-        memory: "2Gi"
-        cpu: "1"
-      limits:
-        memory: "8Gi"
-        cpu: "4"
-    volumeMounts:
-    - mountPath: /config
-      name: plex-config
-    - mountPath: /transcode
-      name: plex-tmp
-    - mountPath: /data
-      name: plex-data
+    - env:
+        - name: CHANGE_CONFIG_DIR_OWNERSHIP
+          value: "false"
+        - name: PLEX_UID
+          value: "1001"
+        - name: PLEX_GID
+          value: "1001"
+        - name: ALLOWED_NETWORKS
+          value: 192.168.250.0/24
+        - name: TZ
+          value: Europe/Warsaw
+        - name: PLEX_CLAIM
+          value: claim-X
+      image: docker.io/plexinc/pms-docker:latest
+      name: plex
+      resources:
+        requests:
+          memory: "2Gi"
+          cpu: "1"
+        limits:
+          memory: "8Gi"
+          cpu: "4"
+      volumeMounts:
+        - mountPath: /config
+          name: plex-config
+        - mountPath: /transcode
+          name: plex-tmp
+        - mountPath: /data
+          name: plex-data
   hostNetwork: true
   hostname: homeserver.localhost
   volumes:
-  - hostPath:
-      path: /var/mnt/data/containers_data/plex/plexmediaserver
-      type: Directory
-    name: plex-config
-  - hostPath:
-      path: /tmp
-      type: Directory
-    name: plex-tmp
-  - hostPath:
-      path: /var/mnt/data
-      type: Directory
-    name: plex-data
-
+    - hostPath:
+        path: /var/mnt/data/containers_data/plex/plexmediaserver
+        type: Directory
+      name: plex-config
+    - hostPath:
+        path: /tmp
+        type: Directory
+      name: plex-tmp
+    - hostPath:
+        path: /var/mnt/data
+        type: Directory
+      name: plex-data

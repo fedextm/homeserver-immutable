@@ -28,7 +28,7 @@ repos:
     rev: v1.37.1
     hooks:
       - id: yamllint
-  #      args: [-c=.ci/yamllint]
+        args: [-c=.ci/yamllint]
   # SHELL ######################################################################
   - repo: https://github.com/jumanjihouse/pre-commit-hooks
     rev: 3.0.0
@@ -57,4 +57,3 @@ repos:
   #   rev: v0.0.2
   #   hooks:
   #     - id: packer_fmt
-

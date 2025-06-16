@@ -7,4 +7,3 @@ Yaml=pihole.yml
 
 [Unit]
 Description=Pihole Service
-

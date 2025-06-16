@@ -1,5 +1,7 @@
+---
 name: Build Image
 
+# yamllint disable-line rule:truthy
 on:
   pull_request:
     branches:
@@ -18,7 +20,7 @@ on:
 jobs:
   build:
     name: Build Image
-    runs-on: [self-hosted, Linux] # Uses your private runner
+    runs-on: [self-hosted, Linux]  # Uses your private runner
 
     steps:
       - name: Checkout repository

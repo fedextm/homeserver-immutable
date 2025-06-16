@@ -7,4 +7,3 @@ Yaml=plex.yml
 
 [Unit]
 Description=Plex Service
-

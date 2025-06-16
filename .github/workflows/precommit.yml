@@ -1,5 +1,7 @@
+---
 name: Pre-Commit
 
+# yamllint disable-line rule:truthy
 on:
   push:
     branches-ignore:
@@ -7,7 +9,7 @@ on:
 
 jobs:
   pre-commit:
-    runs-on: [self-hosted, Linux] # Uses your private runner
+    runs-on: [self-hosted, Linux]  # Uses your private runner
 
     steps:
       - name: Checkout repository
@@ -25,4 +27,3 @@ jobs:
 
       - name: Run pre-commit
         run: pre-commit run --all-files
-        

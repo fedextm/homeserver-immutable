@@ -6,37 +6,36 @@ metadata:
     app: transmission
   name: transmission
   annotations:
-    io.podman.annotations.userns: "keep-id" 
+    io.podman.annotations.userns: "keep-id"
 spec:
   containers:
-  - image: ghcr.io/fedextm/transmission:v4.0.6
-    name: transmission
-    resources:
-      limits:
-        memory: 512Mi
-        cpu: "500m"
-      requests:
-        memory: 256Mi
-        cpu: "250m"
-    securityContext:
-      runAsGroup: 1000
-      runAsUser: 1000
-      fsGroup: 1000
-    volumeMounts:
-    - mountPath: /config
-      name: tr-config-0
-    - mountPath: /data
-      name: tr-data-0
+    - image: ghcr.io/fedextm/transmission:v4.0.6
+      name: transmission
+      resources:
+        limits:
+          memory: 512Mi
+          cpu: "500m"
+        requests:
+          memory: 256Mi
+          cpu: "250m"
+      securityContext:
+        runAsGroup: 1000
+        runAsUser: 1000
+        fsGroup: 1000
+      volumeMounts:
+        - mountPath: /config
+          name: tr-config-0
+        - mountPath: /data
+          name: tr-data-0
   hostNetwork: true
   hostUsers: true
   hostname: transmission.localhost
   volumes:
-  - hostPath:
-      path: /var/mnt/data/containers_data/transmission/config
-      type: Directory
-    name: tr-config-0
-  - hostPath:
-      path: /var/mnt/data
-      type: Directory
-    name: tr-data-0
-
+    - hostPath:
+        path: /var/mnt/data/containers_data/transmission/config
+        type: Directory
+      name: tr-config-0
+    - hostPath:
+        path: /var/mnt/data
+        type: Directory
+      name: tr-data-0

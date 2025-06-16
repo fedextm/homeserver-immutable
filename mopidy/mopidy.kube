@@ -7,4 +7,3 @@ Yaml=mopidy.yml
 
 [Unit]
 Description=Mopidy Service
-
