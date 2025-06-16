@@ -7,4 +7,3 @@ Yaml=transmission.yml
 
 [Unit]
 Description=Transmission Service
-

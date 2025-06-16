@@ -18,4 +18,3 @@ Please use in commit line:
 [bump:major] for major version,
 [bump:minor] for minor changes,
 nothing add for patch
-

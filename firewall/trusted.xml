@@ -4,5 +4,5 @@
   <rule>
     <tcp-mss-clamp value="pmtu"/>
   </rule>
-  <forward/> 	
+  <forward/>
 </zone>

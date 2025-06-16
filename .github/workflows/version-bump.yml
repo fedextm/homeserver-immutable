@@ -1,6 +1,8 @@
+---
 # .github/workflows/version-bump.yml
 name: Version Bump & Changelog Generator (Autodetect)
 
+# yamllint disable-line rule:truthy
 on:
   workflow_call:
     outputs:
@@ -15,7 +17,7 @@ permissions:
 
 jobs:
   tag:
-    runs-on: [self-hosted, Linux] # Uses your private runner
+    runs-on: [self-hosted, Linux]  # Uses your private runner
 
     outputs:
       version: ${{ steps.setver.outputs.version }}

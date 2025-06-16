@@ -1,5 +1,7 @@
+---
 name: Build Image
 
+# yamllint disable-line rule:truthy
 on:
   push:
     branches:
@@ -26,7 +28,7 @@ jobs:
     uses: ./.github/workflows/version-bump.yml
 
   image:
-    needs: version  
+    needs: version
     runs-on: [self-hosted, Linux]
 
     steps:
@@ -50,4 +52,4 @@ jobs:
       - name: Push Docker image
         shell: bash
         run: |
-          podman push ghcr.io/fedextm/homeserver:${{ needs.version.outputs.version }} 
+          podman push ghcr.io/fedextm/homeserver:${{ needs.version.outputs.version }}
