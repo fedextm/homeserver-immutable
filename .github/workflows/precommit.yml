@@ -9,7 +9,7 @@ on:
 
 jobs:
   pre-commit:
-    runs-on: [self-hosted, Linux]  # Uses your private runner
+    runs-on: ubuntu-latest  # Uses your private runner [self-hosted, Linux]
 
     steps:
       - name: Checkout repository
