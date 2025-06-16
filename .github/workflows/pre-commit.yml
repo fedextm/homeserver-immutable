@@ -1,5 +1,5 @@
 ---
-name: Pre-Commit
+name: pre-commit
 
 # yamllint disable-line rule:truthy
 on:

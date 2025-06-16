@@ -30,9 +30,16 @@ systemd:
     # - name: rebase.service
     #   enabled: true
     #   contents_local: rebase.service
+    # - name: var-mnt-data.mount
+    #   enabled: true
+    #   contents_local: data.mount
+    # - name: var-mnt-data-mirror.mount
+    #   enabled: true
+    #   contents_local: data-mirror.mount
+    # Only for testing
     - name: var-mnt-data.mount
       enabled: true
-      contents_local: data.mount
+      contents_local: data-test.mount
 storage:
   links:
     - path: /etc/localtime

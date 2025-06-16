@@ -108,7 +108,7 @@
         "path": "/etc/NetworkManager/system-connections/eth1.nmconnection",
         "contents": {
           "compression": "gzip",
-          "source": "data:;base64,H4sIAAAAAAAC/2yOQU7DMBBF9zkFF4ip3VKBkE9SsRgyv4mleBzZE1A4PWKDMkq9/P/5z3vavdtQRDBoKvLR7YvEETp5k+m24C9FFailRVHvNKAXyjj+/CmCqHVtCjbFLS1fF3uZmCta89G/Beevry68nNz5OVwMxdL+gbMLJ/9u6pEU37SZDauUoVPhmElWmg9O16NTP0L6XBiRcad11kdznBp9zuCu+w0AAP//W57t3mYBAAA="
+          "source": "data:;base64,H4sIAAAAAAAC/2yOQU7DMBBF9z0FF4ip3VKBkE9SsRgyP4mleBzZE1A4PWKDMkq9/P/5z3vavXtfRNBrKvJx2heJI3TyJtNtwV+KKlBLi6IO1KMTyjj+/CmCqHVtCjbFPS1fV3uZmCta89G/Bedvry68nN3lOVwNxdL+gYsLZ/9u6pEU37SZDauUoVPhmElWmg9Ot6NTN0K6XBiRMdA666M5To0+Z/DpNwAA///B7mpZZQEAAA=="
         },
         "mode": 384
       }
@@ -132,7 +132,7 @@
         "name": "systemd-resolved.service"
       },
       {
-        "contents": "[Unit]\nDescription=Mount Data Volume\n\n[Mount]\nWhat=/dev/mapper/vg_data-lv_data\nWhere=/var/mnt/data\nType=ext4\nOptions=nofail,noatime,discard,errors=remount-ro\n\n[Install]\nWantedBy=multi-user.target",
+        "contents": "[Unit]\nDescription=Test mount data directory\n\n[Mount]\nWhat=192.168.3.201:/data\nWhere=/var/mnt/data\nType=nfs4\n\n[Install]\nWantedBy=multi-user.target",
         "enabled": true,
         "name": "var-mnt-data.mount"
       }

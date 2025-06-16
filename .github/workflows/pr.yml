@@ -3,9 +3,10 @@ name: Build Image
 
 # yamllint disable-line rule:truthy
 on:
-  pull_request:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["pre-commit"]
+    types:
+      - completed
     paths:
       - 'Containerfile'
       - 'mopidy/**'

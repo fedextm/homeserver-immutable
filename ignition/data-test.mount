@@ -1,0 +1,10 @@
+[Unit]
+Description=Test mount data directory
+
+[Mount]
+What=192.168.3.201:/data
+Where=/var/mnt/data
+Type=nfs4
+
+[Install]
+WantedBy=multi-user.target
