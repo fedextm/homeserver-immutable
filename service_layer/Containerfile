@@ -1,0 +1,36 @@
+FROM quay.io/fedora/fedora-coreos:stable
+
+RUN rpm-ostree override remove \
+        nfs-utils-coreos \
+        audit
+
+RUN rpm-ostree install \
+        flatpak \
+        fedora-flathub-remote \
+        cockpit-networkmanager \
+        cockpit-podman \
+        cockpit-system \
+        cockpit \
+        samba \
+        nfs-utils \
+        vim \
+        firewalld \
+        wget \
+        zsh \
+        alsa-utils \
+        alsa-lib \
+        alsa-firmware
+
+
+COPY podman/registries.conf /etc/containers/registries.conf
+
+COPY samba/smb.conf /etc/samba/smb.conf
+
+COPY nfs/exports /etc/exports
+
+COPY firewall/trusted.xml /etc/firewalld/zones/trusted.xml
+COPY firewall/public.xml /etc/firewalld/zones/public.xml
+
+RUN systemctl enable --global \
+        systemctl enable smb.service nmb.service nfs-server.service cockpit.socket firewalld.service && \
+        ostree container commit
