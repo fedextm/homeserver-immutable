@@ -10,5 +10,4 @@ WantedBy=default.target
 Type=oneshot
 RemainAfterExit=yes
 ExecStartPre=/bin/sleep 30
-ExecStartPre=systemctl disable zincati
-ExecStart=rpm-ostree rebase --bypass-driver --reboot ostree-unverified-registry:ghcr.io/fedextm/homeserver:v0.6
+ExecStart=rpm-ostree rebase --bypass-driver --reboot ostree-unverified-registry:ghcr.io/fedextm/homeserver:test01
