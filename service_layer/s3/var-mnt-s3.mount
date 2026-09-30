@@ -1,0 +1,13 @@
+[Unit]
+Description=Mount S3 Volume
+Wants=network-online.target
+After=network-online.target
+
+[Mount]
+What=radio-fed-bucket
+Where=/var/mnt/s3
+Type=fuse.s3fs
+Options=_netdev,allow_other,passwd_file=/etc/passwd-s3fs,url=https://s3.eu-central-1.amazonaws.com,endpoint=eu-central-1,uid=1000,gid=1000,umask=022
+
+[Install]
+WantedBy=remote-fs.target

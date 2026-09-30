@@ -41,24 +41,10 @@
   "storage": {
     "directories": [
       {
-        "group": {
-          "name": "core"
-        },
-        "path": "/var/mnt/data",
-        "user": {
-          "name": "core"
-        },
-        "mode": 511
+        "path": "/var/mnt/data"
       },
       {
-        "group": {
-          "name": "core"
-        },
-        "path": "/var/mnt/mirror",
-        "user": {
-          "name": "core"
-        },
-        "mode": 511
+        "path": "/var/mnt/mirror"
       }
     ],
     "files": [
@@ -76,7 +62,15 @@
         "path": "/etc/resolv.conf",
         "contents": {
           "compression": "",
-          "source": "data:,%23%20Generated%20by%20NetworkManager%0Asearch%20lan%0Anameserver%208.8.8.8%0A"
+          "source": "data:,%23%20Uploaded%20from%20ignition%0Asearch%20lan%0Anameserver%208.8.8.8%0A"
+        },
+        "mode": 420
+      },
+      {
+        "path": "/etc/NetworkManager/conf.d/90-dns-none.conf",
+        "contents": {
+          "compression": "gzip",
+          "source": "data:;base64,H4sIAAAAAAAC/0zOQcrCMBAF4P1/ineBNF2UHwz0CHoBcRGSUYPmRZIRNx5eaotkVjPfwOMBgMHD69XBigZ7EH2Vett7+otUGwrPQ7S70UQ2w0IZFvrDd3KJ4jD+T9MGoVCF2tx2A4n3RHF4/wQ4Zp946iCyzUt2RzWYvHaYn1y32L0/AQAA//8Whxm3uAAAAA=="
         },
         "mode": 420
       },
@@ -128,7 +122,7 @@
         "path": "/etc/NetworkManager/system-connections/eth1.nmconnection",
         "contents": {
           "compression": "gzip",
-          "source": "data:;base64,H4sIAAAAAAAC/2yOQU7DMBBF9z0FF4ip3VKBkE9SsRgyP4mleBzZE1A4PWKDMkq9/P/5z3vavXtfRNBrKvJx2heJI3TyJtNtwV+KKlBLi6IO1KMTyjj+/CmCqHVtCjbFPS1fV3uZmCta89G/Bedvry68nN3lOVwNxdL+gYsLZ/9u6pEU37SZDauUoVPhmElWmg9Ot6NTN0K6XBiRMdA666M5To0+Z/DpNwAA///B7mpZZQEAAA=="
+          "source": "data:;base64,H4sIAAAAAAAC/2yNQa6DMAxE95ziXwB+QylqFzkJ6sLFA0QiDkpMK3r6qjsi6uXM87y/3XV9EEGvLsi92BeOLXQyWabbgm+KKNCcFkUcqEcp5HH8fAeB1bgmBWdF55Znk5uJOSIlY82trkx7rerLqTr/101GjaR40ZZBudNDp8DWk6w0H6TtUVqOkNIHhmUMtM76a45doscMLj4BAAD//5XvLtxGAQAA"
         },
         "mode": 384
       }
@@ -160,7 +154,7 @@
         "name": "var-mnt-data.mount"
       },
       {
-        "contents": "[Unit]\nDescription=Mount Data Volume\n\n[Mount]\nWhat=/dev/mapper/vg_backup-lv_backup\nWhere=/var/mnt/data-mirror\nType=ext4\nOptions=nofail,noatime,discard,errors=remount-ro\n\n[Install]\nWantedBy=multi-user.target\n",
+        "contents": "[Unit]\nDescription=Mount Data Volume\n\n[Mount]\nWhat=/dev/mapper/vg_backup-lv_backup\nWhere=/var/mnt/mirror\nType=ext4\nOptions=nofail,noatime,discard,errors=remount-ro\n\n[Install]\nWantedBy=multi-user.target\n",
         "enabled": true,
         "name": "var-mnt-mirror.mount"
       }

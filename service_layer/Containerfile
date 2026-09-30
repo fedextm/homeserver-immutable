@@ -1,36 +1,40 @@
 FROM quay.io/fedora/fedora-coreos:stable
 
-RUN rpm-ostree override remove \
-        nfs-utils-coreos \
-        audit
-
-RUN rpm-ostree install \
+RUN dnf install -y --setopt=install_weak_deps=False \
         flatpak \
         fedora-flathub-remote \
+        cockpit \
+        cockpit-system \
         cockpit-networkmanager \
         cockpit-podman \
-        cockpit-system \
-        cockpit \
+        cockpit-storaged \
         samba \
         nfs-utils \
+        fail2ban \
         vim \
         firewalld \
         wget \
         zsh \
         alsa-utils \
-        alsa-lib \
-        alsa-firmware
-
+        alsa-firmware \
+        alsa-sof-firmware \
+        s3fs-fuse \
+        fuse && \
+    dnf clean all && \
+    ostree container commit
 
 COPY podman/registries.conf /etc/containers/registries.conf
 
 COPY samba/smb.conf /etc/samba/smb.conf
+
+COPY --chmod=600 s3/passwd-s3fs /etc/passwd-s3fs
+COPY s3/var-mnt-s3.mount /etc/systemd/system/var-mnt-s3.mount
 
 COPY nfs/exports /etc/exports
 
 COPY firewall/trusted.xml /etc/firewalld/zones/trusted.xml
 COPY firewall/public.xml /etc/firewalld/zones/public.xml
 
-RUN systemctl enable --global \
-        systemctl enable smb.service nmb.service nfs-server.service cockpit.socket firewalld.service && \
+RUN systemctl enable \
+        smb.service nfs-server.service cockpit.socket var-mnt-s3.mount firewalld.service fail2ban.service && \
         ostree container commit
