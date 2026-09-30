@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mpd
+  namespace: mpd
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate          # старый под должен освободить звуковую карту до запуска нового
+  selector:
+    matchLabels:
+      app: mpd
+  template:
+    metadata:
+      labels:
+        app: mpd
+    spec:
+      hostname: mpd
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        supplementalGroups: [63]   # GID группы audio на хосте
+        fsGroupChangePolicy: OnRootMismatch
+      containers:
+        - name: mpd
+          image: ghcr.io/fedextm/mpd:v0.24.15
+          env:
+            - name: TZ
+              value: Europe/Warsaw
+          ports:
+            - name: mpd
+              containerPort: 6600
+            - name: http
+              containerPort: 8000
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: music
+              mountPath: /music
+              readOnly: true
+            - name: snd
+              mountPath: /dev/snd
+          livenessProbe:
+            tcpSocket:
+              port: 6600
+            initialDelaySeconds: 30
+            periodSeconds: 60
+          readinessProbe:
+            tcpSocket:
+              port: 6600
+            periodSeconds: 10
+          resources:
+            limits:
+              memory: 512Mi
+      volumes:
+        - name: config
+          hostPath:
+            path: /var/mnt/data/ct_data/mpd
+            type: Directory
+        - name: music
+          hostPath:
+            path: /var/mnt/data/music
+            type: Directory
+        - name: snd
+          hostPath:
+            path: /dev/snd
+            type: Directory
