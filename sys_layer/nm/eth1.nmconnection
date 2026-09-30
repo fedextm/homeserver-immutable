@@ -5,7 +5,6 @@
             zone=trusted
             [ipv4]
             address1=192.168.250.3/24
-            dns=192.168.3.201;
             gateway=192.168.250.1
             method=manual
             [ipv6]

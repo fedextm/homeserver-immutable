@@ -402,3 +402,4 @@ FodyWeavers.xsd
 
 # Disable sensitive files
 .auth.json
+passwd-s3fs
