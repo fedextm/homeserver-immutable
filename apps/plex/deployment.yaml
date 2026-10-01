@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: plex
+  namespace: plex
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: plex
+  template:
+    metadata:
+      labels:
+        app: plex
+    spec:
+      hostNetwork: true
+      containers:
+        - name: plex
+          image: docker.io/plexinc/pms-docker:1.43.4.10903-e5521bd8c
+          env:
+            - name: TZ
+              value: Europe/Warsaw
+            - name: PLEX_UID
+              value: "1001"
+            - name: PLEX_GID
+              value: "1001"
+            - name: CHANGE_CONFIG_DIR_OWNERSHIP
+              value: "false"
+            - name: ALLOWED_NETWORKS
+              value: 192.168.250.0/24
+            # - name: PLEX_CLAIM
+            #   value: claim-xxxxxx
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: transcode
+              mountPath: /transcode
+            - name: data
+              mountPath: /data
+            - name: dri
+              mountPath: /dev/dri
+          startupProbe:
+            httpGet:
+              path: /identity
+              port: 32400
+            periodSeconds: 10
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /identity
+              port: 32400
+            periodSeconds: 60
+      volumes:
+        - name: config
+          hostPath:
+            path: /var/mnt/data/ct_data/plex/plexmediaserver
+            type: Directory
+        - name: transcode
+          emptyDir:
+            sizeLimit: 8Gi
+            # medium: Memory   # если хотите транскодировать в RAM
+        - name: data
+          hostPath:
+            path: /var/mnt/data
+            type: Directory
+        - name: dri
+          hostPath:
+            path: /dev/dri
+            type: Directory

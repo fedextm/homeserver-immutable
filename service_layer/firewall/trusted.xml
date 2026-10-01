@@ -4,5 +4,8 @@
   <rule>
     <tcp-mss-clamp value="pmtu"/>
   </rule>
+  <interface name="cni0"/>
+  <source address="10.42.0.0/16"/>
+  <source address="10.43.0.0/16"/>
   <forward/>
 </zone>

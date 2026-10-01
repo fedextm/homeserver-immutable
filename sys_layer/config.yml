@@ -27,28 +27,21 @@ passwd:
       gid: 1001
 systemd:
   units:
-    # - name: actions-runner.service
-    #   enabled: true
-    #   contents_local: actions-runner.service
     - name: zincati.service
       enabled: false
     - name: podman-restart.service
       enabled: true
     - name: systemd-resolved.service
       enabled: false
-    # - name: rebase.service
-    #   enabled: true
-    #   contents_local: rebase.service
+    - name: rebase.service
+      enabled: true
+      contents_local: rebase.service
     - name: var-mnt-data.mount
       enabled: true
       contents_local: data.mount
     - name: var-mnt-mirror.mount
       enabled: true
       contents_local: mirror.mount
-    # Only for testing
-    # - name: var-mnt-data.mount
-    #   enabled: true
-    #   contents_local: data-test.mount
 storage:
   links:
     - path: /etc/localtime

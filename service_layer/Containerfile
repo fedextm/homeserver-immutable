@@ -1,3 +1,7 @@
+ARG KUBESOLO_VERSION=v1.2.0
+ARG FLUX_VERSION=v2.9.5
+ARG KUBECTL_VERSION=v1.37.0
+
 FROM quay.io/fedora/fedora-coreos:stable
 
 RUN dnf install -y --setopt=install_weak_deps=False \
@@ -16,9 +20,14 @@ RUN dnf install -y --setopt=install_weak_deps=False \
         wget \
         zsh \
         alsa-utils \
+        rclone \
         alsa-firmware \
         alsa-sof-firmware \
         s3fs-fuse \
+        htop \
+        mc \
+        atop \
+        btop \
         fuse && \
     dnf clean all && \
     ostree container commit
@@ -38,3 +47,29 @@ COPY firewall/public.xml /etc/firewalld/zones/public.xml
 RUN systemctl enable \
         smb.service nfs-server.service cockpit.socket var-mnt-s3.mount firewalld.service fail2ban.service && \
         ostree container commit
+
+# KubeSolo
+RUN curl -fsSL -o /tmp/kubesolo.tar.gz \
+      "https://github.com/portainer/kubesolo/releases/download/${KUBESOLO_VERSION}/kubesolo-${KUBESOLO_VERSION}-linux-amd64.tar.gz" && \
+    tar -xzf /tmp/kubesolo.tar.gz -C /tmp && \
+    install -m 0755 /tmp/kubesolo /usr/bin/kubesolo && \
+    rm -rf /tmp/kubesolo*
+
+#kubectl и flux CLI
+RUN curl -fsSL -o /usr/bin/kubectl \
+      "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl" && \
+    chmod 0755 /usr/bin/kubectl && \
+    curl -fsSL "https://github.com/fluxcd/flux2/releases/download/${FLUX_VERSION}/flux_${FLUX_VERSION#v}_linux_amd64.tar.gz" \
+      | tar -xz -C /usr/bin flux
+
+#Flux
+RUN mkdir -p /usr/share/homeserver/flux && \
+    curl -fsSL -o /usr/share/homeserver/flux/install.yaml \
+      "https://github.com/fluxcd/flux2/releases/download/${FLUX_VERSION}/install.yaml"
+
+COPY k8s/kubesolo.service /usr/lib/systemd/system/kubesolo.service
+COPY k8s/flux-sync.yaml /usr/share/homeserver/flux/flux-sync.yaml
+COPY k8s/flux-bootstrap.service /usr/lib/systemd/system/flux-bootstrap.service
+
+RUN systemctl enable kubesolo.service flux-bootstrap.service && \
+    ostree container commit
