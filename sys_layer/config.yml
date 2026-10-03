@@ -97,3 +97,7 @@ storage:
       mode: 0600
       contents:
         local: nm/eth1.nmconnection
+    # - path: /etc/NetworkManager/system-connections/PPPoE.nmconnection
+    #   mode: 0600
+    #   contents:
+    #     local: nm/PPPoE.nmconnection        
