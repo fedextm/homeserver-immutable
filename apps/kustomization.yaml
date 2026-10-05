@@ -6,3 +6,4 @@ resources:
   - transmission
   - pihole
   - backup
+  - vault

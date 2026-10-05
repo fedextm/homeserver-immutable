@@ -3,4 +3,8 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - deployment.yaml
-  
+configMapGenerator:
+  - name: transmission-settings
+    namespace: transmission
+    files:
+      - settings.json

@@ -49,6 +49,9 @@ spec:
               mountPath: /config
             - name: data
               mountPath: /data
+            - name: settings
+              mountPath: /config/settings.json
+              subPath: settings.json
           livenessProbe:
             tcpSocket:
               port: 9091
@@ -60,6 +63,9 @@ spec:
               port: 9091
             periodSeconds: 10
       volumes:
+        - name: settings
+          configMap:
+            name: transmission-settings
         - name: config
           hostPath:
             path: /var/mnt/data/ct_data/transmission/config
