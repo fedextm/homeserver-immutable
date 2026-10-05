@@ -18,9 +18,8 @@ spec:
         spec:
           restartPolicy: Never
           securityContext:
-            runAsUser: 1000
-            runAsGroup: 1000
-            runAsNonRoot: true
+            runAsUser: 0
+            runAsGroup: 0
           containers:
             - name: rsync
               image: docker.io/library/alpine:3.24

@@ -19,11 +19,12 @@
 ## Хост
 
 - ОС: Fedora CoreOS 44, поток stable. Работает как ВМ под libvirt/QEMU (диск `vda`).
-- Имя: `homeserver.local`. Основной IP: `192.168.250.3`.
-- Вторая сеть: `192.168.3.0/24`, шлюз `192.168.3.201`. В ней Pi-hole раздаёт DHCP.
+- Имя: `homeserver.local`. Основной IP: `192.168.250.3` (`eth1`).
+- `eth0`: зона firewalld `public`, `192.168.122.3/24`, шлюз в конфиге не задан (похоже на дефолтную NAT-сеть libvirt). Наружу из публичной зоны открыты только ssh, https, `51413/tcp+udp` (transmission) и `32400/tcp` (plex) — см. `service_layer/firewall/public.xml`.
+- `eth1`: зона firewalld `trusted`, `192.168.250.3/24`, шлюз `192.168.250.1`. Это основная домашняя LAN; здесь же Pi-hole раздаёт DHCP (`192.168.250.100`–`192.168.250.110`, клиентам роутером объявляется `192.168.250.3`).
 - Интерфейсы называются `eth0`, `eth1` (в аргументах ядра `net.ifnames=0 biosdevname=0`).
 - Аргументы ядра: `mitigations=off`, `selinux=0`, `audit=0`. SELinux выключен, поэтому `:z`/`:Z` на томах ничего не делают.
-- `systemd-resolved` выключен. `/etc/resolv.conf` — обычный файл (`overwrite: true` в Ignition), `nameserver 8.8.8.8`. NetworkManager не трогает его благодаря drop-in с `dns=none` и `rc-manager=unmanaged`.
+- `systemd-resolved` выключен. `/etc/resolv.conf` — обычный файл (`overwrite: true` в Ignition), `search lan` + `nameserver 8.8.8.8`. NetworkManager не трогает его благодаря drop-in с `dns=none` и `rc-manager=unmanaged`.
 - Firewalld включён. Зоны лежат в образе: `firewall/trusted.xml`, `firewall/public.xml`.
 
 ### Пользователи и группы
@@ -31,7 +32,7 @@
 | Имя | UID/GID | Назначение |
 |---|---|---|
 | `core` | 1000/1000 | Основной пользователь, linger включён |
-| `plex` | 979, группа `gplex` 1001 | Владелец файлов Plex |
+| `plex` | 1001, группа `plex` 1001 | Владелец файлов Plex |
 | `audio` (хост) | GID 63 | Доступ к `/dev/snd` |
 | `vault` (внутри образа Vault) | UID 100 | Владелец данных Vault |
 
@@ -43,13 +44,13 @@
 - Владелец корня ФС на дисках выставлен один раз через `chown` на смонтированной ФС. Владелец папки-точки монтирования ни на что не влияет.
 - В корне дисков лежат метки `.mirror-source` (данные) и `.mirror-target` (зеркало). Бэкап отказывается работать без них.
 - Старые конфиги могут ссылаться на `/data/...`. На этом хосте такого пути нет, правильно `/var/mnt/data/...`.
-- Данные приложений: `/var/mnt/data/containers_data/<приложение>/`.
+- Данные приложений: `/var/mnt/data/ct_data/<приложение>/`.
 
 ## Уровень 1: Ignition
 
 - Собирается из Butane (`variant: fcos`, `version: 1.7.0`).
 - Секреты (`.auth.json` для ghcr.io, токены, ключи) подключаются через `local:` и **встраиваются в `config.ign`**.
-- **`config.ign` не должен лежать в git**: репозиторий публичный. Хранить только `.bu`, `config.ign` собирать локально. Если в истории git уже есть `config.ign` с токенами, токены нужно перевыпустить.
+- **`config.ign` не должен лежать в git**: репозиторий публичный. Хранить только `.bu`, `config.ign` собирать локально. **Сейчас это правило нарушено**: в git закоммичены `sys_layer/config.ign` (реальный, содержит встроенные `.auth.json` и `password_hash`) и пустой `config.ign` в корне репозитория. См. TODO ниже — токены и ключи из него нужно перевыпустить.
 - Подводные камни Ignition на FCOS 44:
   - `primary_group` в пользователе требует, чтобы группа была объявлена в `passwd.groups`.
   - Ссылка `/etc/localtime` без `overwrite: true` падает, если файл уже есть в образе.
@@ -66,7 +67,7 @@
 - `systemctl enable` для системных юнитов — без `--global` (он для пользовательских юнитов).
 - Бинарники класть в `/usr/bin`, **не в `/usr/local/bin`**: в FCOS `/usr/local` — это симлинк на `/var/usrlocal`, и он не обновляется вместе с образом.
 - Секреты в образ не класть никогда: образ уходит в реестр. Секреты доставляются через Ignition.
-- В образе: samba, nfs-utils, cockpit (+ networkmanager, podman, system, storaged), firewalld, flatpak, zsh, vim, wget, alsa-utils и alsa-firmware, KubeSolo, kubectl, flux CLI, манифесты Flux.
+- В образе: samba, nfs-utils, cockpit (+ плагины cockpit-networkmanager, cockpit-system, cockpit-storaged — **cockpit-podman не ставится**), firewalld, fail2ban, flatpak, zsh, vim, wget, rclone, s3fs-fuse, alsa-utils, alsa-firmware и alsa-sof-firmware, htop/mc/atop/btop, KubeSolo, kubectl, flux CLI, манифесты Flux. Включены сервисы `smb`, `nfs-server`, `cockpit.socket`, `var-mnt-s3.mount`, `firewalld`, `fail2ban` (+ `kubesolo`, `flux-bootstrap`).
 
 ### Тестирование на работающей машине
 
@@ -95,13 +96,12 @@
 
 #### Firewalld для подов
 
-Без этого у подов нет DNS и выхода в интернет:
+Без этого у подов нет DNS и выхода в интернет. В образе это уже зашито в `service_layer/firewall/trusted.xml` (интерфейс `cni0` + источники `10.42.0.0/16` и `10.43.0.0/16`, зона `trusted` с `target="ACCEPT"`). На живой машине, которая ещё не перешла на обновлённый образ, правила накатываются вручную:
 ```bash
 firewall-cmd --permanent --zone=trusted --add-interface=cni0
 firewall-cmd --permanent --zone=trusted --add-source=10.42.0.0/16
 firewall-cmd --permanent --zone=trusted --add-source=10.43.0.0/16
 ```
-**TODO:** перенести эти правила в `firewall/trusted.xml` в образе.
 
 #### Известный баг KubeSolo v1.2.0 (важно)
 
@@ -134,12 +134,13 @@ firewall-cmd --permanent --zone=trusted --add-source=10.43.0.0/16
 
 | Приложение | Образ | Сеть | Особенности |
 |---|---|---|---|
-| `mpd` | `ghcr.io/fedextm/mpd:v0.24.15` | Service LoadBalancer 6600, 8000 | `privileged` + `hostPath /dev/snd`, `supplementalGroups: [63]`, UID 1000, вывод на `hw:` для bit-perfect |
-| `plex` | `docker.io/plexinc/pms-docker:1.43.4.10903-e5521bd8c` | `hostNetwork` | `privileged` + `/dev/dri`, `PLEX_UID=979`, `PLEX_GID=1001`, транскодинг в `emptyDir`, проба `/identity` |
-| `transmission` | `ghcr.io/fedextm/transmission:v4.1.2` | `hostNetwork` | UID 1000, без привилегий, `drop: ALL`, `terminationGracePeriodSeconds: 60` |
+| `mpd` | `ghcr.io/fedextm/mpd:v0.24.15` | Service LoadBalancer 6600, 8000 | `privileged` + `hostPath /dev/snd`, `supplementalGroups: [63]`, UID/GID 1000, вывод на `hw:` для bit-perfect |
+| `plex` | `docker.io/plexinc/pms-docker:1.43.4.10903-e5521bd8c` | `hostNetwork` | `privileged` + `/dev/dri`, `PLEX_UID=1001`, `PLEX_GID=1001`, транскодинг в `emptyDir` (`sizeLimit: 8Gi`), проба `/identity` |
+| `transmission` | `ghcr.io/fedextm/transmission:v4.1.2` | `hostNetwork` | UID/GID 1000, без привилегий, `drop: ALL`, `terminationGracePeriodSeconds: 60` |
 | `pihole` | `docker.io/pihole/pihole:2026.04.1` | `hostNetwork`, `dnsPolicy: Default` | DNS + DHCP, `NET_ADMIN`, `SYS_TIME`, `SYS_NICE`; пароль из секрета `pihole-web` |
-| `vault` | `docker.io/hashicorp/vault:<закреплённая версия>` | Service LoadBalancer 8200 | `config.hcl` в ConfigMap, file storage, `SKIP_SETCAP=true`, пробы с `sealedcode=200&uninitcode=200` |
-| `backup` | `docker.io/library/alpine:3.22` + `apk add rsync` | — | CronJob 03:30 Europe/Warsaw, см. ниже |
+| `backup` | `docker.io/library/alpine:3.24` | — | CronJob 03:30 Europe/Warsaw, `rsync` ставится в самом job'е (`apk add --no-cache rsync` при каждом запуске, не запечён в образ), см. ниже |
+
+`vault` в `apps/` и в `apps/kustomization.yaml` сейчас нет вообще — манифеста для него ещё не существует (архитектурное решение Kubernetes/Podman Quadlet отложено, см. TODO и «Архитектурные оговорки»).
 
 #### Бэкап `/var/mnt/data` → `/var/mnt/mirror`
 
@@ -152,12 +153,14 @@ firewall-cmd --permanent --zone=trusted --add-source=10.43.0.0/16
 
 ### Архитектурные оговорки
 
-- **Pi-hole и Vault лучше держать на Podman Quadlet, а не в Kubernetes.** Pi-hole раздаёт DNS и DHCP всей сети, а KubeSolo после перезагрузки поднимается минутами, пока сеть сидит без DNS. Vault не должен зависеть от кластера, которому выдаёт секреты. Манифесты для обоих сделаны по просьбе владельца, решение за ним.
+- **Pi-hole и Vault лучше держать на Podman Quadlet, а не в Kubernetes.** Pi-hole раздаёт DNS и DHCP всей сети, а KubeSolo после перезагрузки поднимается минутами, пока сеть сидит без DNS. Vault не должен зависеть от кластера, которому выдаёт секреты. Манифест Pi-hole в Kubernetes сделан по просьбе владельца; манифеста Vault для Kubernetes в репозитории пока нет вообще — решение, в какую сторону делать (Quadlet или Kubernetes), ещё не принято.
 - KubeSolo официально не рекомендует соседство с другими контейнерными движками, а в FCOS встроен Podman. Пока конфликтов не замечено.
-- Vault после каждого перезапуска пода запечатан: `kubectl -n vault exec -it deploy/vault -- vault operator unseal` (по порогу ключей).
+- Манифеста Vault для Kubernetes в `apps/` пока нет (см. TODO). Когда он появится: после каждого перезапуска пода Vault будет запечатан — `kubectl -n vault exec -it deploy/vault -- vault operator unseal` (по порогу ключей).
 - В libvirt-сети, где живёт ВМ, может работать встроенный dnsmasq с DHCP. Он конфликтует с Pi-hole: убрать блок `<dhcp>` через `virsh net-edit` на хосте или перевести ВМ на мост к физической сети.
 
 ## Образы, которые собираются из этого репозитория
+
+**Проверено:** Containerfile для MPD и Transmission в этом репозитории сейчас нет — ни на `main`, ни на других ветках, ни в истории git. Единственный Containerfile в репозитории — `service_layer/Containerfile` (базовый образ ОС). Описание ниже, видимо, относится к сборке, которая живёт в другом месте (отдельный репозиторий или локальные неотслеживаемые скрипты) — стоит уточнить у владельца и поправить этот раздел, когда найдётся актуальный источник.
 
 - **MPD:** многоэтапная сборка на `debian:trixie-slim`. Исходники качаются с musicpd.org по `ARG MPD_VERSION`. Runtime-зависимости вычисляются через `ldd` + `dpkg -S`. Отключены pulse, jack, pipewire, openal, sndio, ao, zeroconf, systemd, тесты. В итоговом образе `USER 1000:1000`.
 - **Transmission:** `alpine:${ALPINE_VERSION}` + `transmission-daemon` + `tini`, `USER 1000:1000`, `ENTRYPOINT ["/sbin/tini", "--", ...]`, обязательно `--foreground`. Версию Transmission определяет версия Alpine, тег образа ставить по `transmission-daemon --version`. `settings.json` править только при остановленном контейнере.
@@ -165,14 +168,15 @@ firewall-cmd --permanent --zone=trusted --add-source=10.43.0.0/16
 ## Незавершённое и планы
 
 - [ ] Обновить KubeSolo до релиза с исправлением #199, после этого снова можно перезапускать сервис.
-- [ ] Перенести правила firewalld для `cni0` и сетей подов в `firewall/trusted.xml`.
-- [ ] Убрать `config.ign` из git, добавить в `.gitignore`, перевыпустить попавшие туда токены.
-- [ ] Секреты через Vault + External Secrets Operator: план есть (три Flux Kustomization `infra-controllers` → `infra-configs` → `homeserver` с `dependsOn`, ESO через HelmRelease, `ClusterSecretStore` с auth `kubernetes` к Vault на `192.168.250.3:8200`). Отложено.
+- [x] ~~Перенести правила firewalld для `cni0` и сетей подов в `firewall/trusted.xml`~~ — уже сделано, см. `service_layer/firewall/trusted.xml`.
+- [ ] **Убрать `config.ign` из git**: сейчас закоммичены `sys_layer/config.ign` (реальный, со встроенными `.auth.json` и `password_hash`) и пустой `config.ign` в корне репозитория. Добавить оба пути в `.gitignore`, перевыпустить попавшие туда токены/пароль.
+- [ ] Манифеста Vault для Kubernetes в `apps/` пока нет вообще (решение по архитектуре — Quadlet vs Kubernetes — отложено, см. «Архитектурные оговорки»). Секреты через Vault + External Secrets Operator: план есть (три Flux Kustomization `infra-controllers` → `infra-configs` → `homeserver` с `dependsOn`, ESO через HelmRelease, `ClusterSecretStore` с auth `kubernetes` к Vault на `192.168.250.3:8200`). Отложено.
 - [ ] Альтернатива для секретов в git — SOPS + age.
-- [ ] Vault: закрепить версию, `api_addr` на реальный адрес, подумать о TLS и auto-unseal.
-- [ ] Сборку образов (особенно MPD) перенести в GitHub Actions.
+- [ ] Когда манифест Vault появится в `apps/`: закрепить версию образа, `api_addr` на реальный адрес, подумать о TLS и auto-unseal.
+- [ ] Сборку образов (особенно MPD) перенести в GitHub Actions. В `sys_layer/actions-runner.service` уже лежит юнит self-hosted runner'а, но он не подключён через `sys_layer/config.yml` (Butane) — пока не включается при первой загрузке. Также непонятно, где сейчас фактически собираются образы MPD/Transmission — Containerfile для них в этом репозитории не найден (см. раздел выше).
 - [ ] Renovate для обновления тегов образов и Helm-чартов.
 - [ ] Restic для версионированных бэкапов конфигов и баз (в дополнение к rsync-зеркалу).
+- [ ] В истории git (ветка `CI_versioning_pipeline`) когда-то лежал каталог `transmission/config/` с реальными данными Transmission (торренты, resume-файлы, settings.json) — стоит решить, нужно ли вычищать историю.
 
 ## Стиль работы с владельцем
 
