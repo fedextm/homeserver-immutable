@@ -42,7 +42,7 @@ spec:
               readOnly: true
             - name: snd
               mountPath: /dev/snd
-            - name: settings
+            - name: mpd-settings
               mountPath: /config/mpd.conf
               subPath: mpd.conf
           livenessProbe:
@@ -62,7 +62,7 @@ spec:
               cpu: 500m
               memory: 512Mi
       volumes:
-        - name: settings
+        - name: mpd-settings
           configMap:
             name: mpd-settings
         - name: config
