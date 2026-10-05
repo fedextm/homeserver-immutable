@@ -43,9 +43,6 @@ COPY nfs/exports /etc/exports
 COPY firewall/trusted.xml /etc/firewalld/zones/trusted.xml
 COPY firewall/public.xml /etc/firewalld/zones/public.xml
 
-COPY --chown=core:core --chmod=755 backup/data-backup.sh /var/home/core/data-backup.sh
-
-
 RUN systemctl enable \
         smb.service nfs-server.service cockpit.socket var-mnt-s3.mount firewalld.service fail2ban.service && \
         ostree container commit

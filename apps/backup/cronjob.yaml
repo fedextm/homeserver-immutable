@@ -1,0 +1,67 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: data-mirror
+  namespace: backup
+spec:
+  schedule: "30 3 * * *"
+  timeZone: Europe/Warsaw
+  concurrencyPolicy: Forbid          # не запускать новый, пока идёт предыдущий
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 21600   # не дольше 6 часов
+      template:
+        spec:
+          restartPolicy: Never
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+          containers:
+            - name: rsync
+              image: docker.io/library/alpine:3.24
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -eu
+                  [ -f /src/.mirror-source ] || { echo "Source disk not mounted, aborting"; exit 1; }
+                  [ -f /dst/.mirror-target ] || { echo "Mirror disk not mounted, aborting"; exit 1; }
+
+                  apk add --no-cache -q rsync
+
+                  rc=0
+                  rsync -aHAX --numeric-ids --delete --stats \
+                    --exclude=lost+found \
+                    --exclude=plex_backup \
+                    --exclude=plexmediaserver \
+                    --exclude=films \
+                    --exclude=downloads \
+                    /src/ /dst/ || rc=$?
+
+                  if [ "$rc" -eq 0 ] || [ "$rc" -eq 24 ]; then
+                    echo "Mirror completed (rc=$rc)"
+                    exit 0
+                  fi
+                  echo "rsync failed (rc=$rc)"
+                  exit "$rc"
+              securityContext:
+                allowPrivilegeEscalation: false
+              volumeMounts:
+                - name: src
+                  mountPath: /src
+                  readOnly: true
+                - name: dst
+                  mountPath: /dst
+          volumes:
+            - name: src
+              hostPath:
+                path: /var/mnt/data
+                type: Directory
+            - name: dst
+              hostPath:
+                path: /var/mnt/mirror
+                type: Directory
