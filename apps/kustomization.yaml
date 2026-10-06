@@ -7,3 +7,5 @@ resources:
   - pihole
   - backup
   - vault
+  - monitoring
+  - node-exporter

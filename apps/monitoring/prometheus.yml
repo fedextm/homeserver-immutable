@@ -1,0 +1,24 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'srv01'
+    static_configs:
+      - targets: ['192.168.3.201:9100']
+        labels:
+          instance: 'srv01'
+  - job_name: 'hostkey'
+    static_configs:
+      - targets: ['151.243.196.109:9100']
+        labels:
+          instance: 'hostkey'
+  - job_name: 'srv01-podman-containers'
+    static_configs:
+      - targets: ['192.168.3.201:9882']
+        labels:
+          instance: 'srv01-containers'
+  - job_name: 'homeserver'
+    static_configs:
+      - targets: ['192.168.250.3:9100']
+        labels:
+          instance: 'homeserver'
