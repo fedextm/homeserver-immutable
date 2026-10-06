@@ -1,0 +1,12 @@
+[Unit]
+Description=Set zsh as the login shell of core
+ConditionPathExists=/usr/bin/zsh
+After=local-fs.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/sh -c 'getent passwd core | grep -q ":/usr/bin/zsh$" || usermod -s /usr/bin/zsh core; [ -e /var/home/core/.zshrc ] || install -o core -g core -m 0644 /etc/skel/.zshrc /var/home/core/.zshrc'
+
+[Install]
+WantedBy=multi-user.target

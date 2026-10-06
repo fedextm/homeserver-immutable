@@ -1,0 +1,18 @@
+# Oh My Zsh лежит в образе (/usr/share, только чтение), поэтому без автообновления
+export ZSH=/usr/share/oh-my-zsh
+export ZSH_CACHE_DIR="$HOME/.cache/oh-my-zsh"
+export ZSH_COMPDUMP="$ZSH_CACHE_DIR/.zcompdump-$HOST"
+mkdir -p "$ZSH_CACHE_DIR/completions"
+DISABLE_AUTO_UPDATE="true"
+ZSH_DISABLE_COMPFIX="true"
+
+ZSH_THEME="robbyrussell"
+plugins=(git sudo kubectl flux)
+
+source $ZSH/oh-my-zsh.sh
+
+[ -r /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ] && \
+    source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+# подсветка синтаксиса должна подключаться последней
+[ -r /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ] && \
+    source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh

@@ -1,18 +1,13 @@
 [Unit]
 Description=KubeSolo single-node Kubernetes
 Wants=network-online.target
-After=network-online.target
+After=network-online.target var-mnt-data.mount
 
 [Service]
 Type=simple
-Environment=KUBESOLO_PATH=/var/lib/kubesolo
-Environment=KUBESOLO_NODE_IP=192.168.250.3
-Environment=KUBESOLO_APISERVER_EXTRA_SANS=192.168.250.3,homeserver.local
-Environment=KUBESOLO_LOCAL_STORAGE=true
-Environment=KUBESOLO_DB_WAL_REPAIR=true
 ExecStartPre=-/usr/sbin/modprobe overlay
 ExecStartPre=-/usr/sbin/modprobe br_netfilter
-ExecStart=/usr/bin/kubesolo
+ExecStart=/usr/bin/kubesolo --config=/etc/kubesolo/config.yaml
 Restart=always
 RestartSec=5s
 Delegate=yes

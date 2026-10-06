@@ -1,0 +1,18 @@
+apiVersion: kubesolo.io/v1alpha1
+kind: Config
+
+path: /var/lib/kubesolo
+
+kubernetes:
+  apiServer:
+    extraSANs:
+      - 192.168.250.3
+      - homeserver.local
+
+network:
+  nodeIP: 192.168.250.3
+
+storage:
+  localPath:
+    enabled: true
+  dbWALRepair: true

@@ -29,12 +29,10 @@ systemd:
   units:
     - name: zincati.service
       enabled: false
-    - name: podman-restart.service
-      enabled: true
     - name: systemd-resolved.service
       enabled: false
     - name: rebase.service
-      enabled: true
+      enabled: false
       contents_local: rebase.service
     - name: var-mnt-data.mount
       enabled: true

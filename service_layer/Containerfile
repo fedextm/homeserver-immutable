@@ -1,8 +1,11 @@
-ARG KUBESOLO_VERSION=v1.2.0
-ARG FLUX_VERSION=v2.9.5
-ARG KUBECTL_VERSION=v1.37.0
-
 FROM quay.io/fedora/fedora-coreos:stable
+
+ARG KUBESOLO_VERSION=v1.2.1
+ARG FLUX_VERSION=v2.9.6
+ARG KUBECTL_VERSION=v1.35.9
+ARG CRICTL_VERSION=v1.35.0
+# у Oh My Zsh нет релизов, версия закреплена коммитом
+ARG OMZ_COMMIT=60c9a7a839b790cd905d0fd4419435124fd1bdc0
 
 RUN dnf install -y --setopt=install_weak_deps=False \
         flatpak \
@@ -18,6 +21,8 @@ RUN dnf install -y --setopt=install_weak_deps=False \
         firewalld \
         wget \
         zsh \
+        zsh-autosuggestions \
+        zsh-syntax-highlighting \
         alsa-utils \
         rclone \
         alsa-firmware \
@@ -27,7 +32,29 @@ RUN dnf install -y --setopt=install_weak_deps=False \
         mc \
         atop \
         btop \
-        fuse && \
+        fuse \
+        ncdu \
+        strace \
+        tcpdump \
+        traceroute \
+        mtr \
+        iotop-c \
+        sysstat \
+        conntrack-tools \
+        nmap-ncat \
+        tmux \
+        git \
+        usbutils \
+        iftop \
+        nethogs \
+        iperf3 \
+        fio \
+        tree \
+        unzip \
+        lshw \
+        dmidecode \
+        smartmontools \
+        lm_sensors && \
     dnf clean all && \
     ostree container commit
 
@@ -61,14 +88,27 @@ RUN curl -fsSL -o /usr/bin/kubectl \
     curl -fsSL "https://github.com/fluxcd/flux2/releases/download/${FLUX_VERSION}/flux_${FLUX_VERSION#v}_linux_amd64.tar.gz" \
       | tar -xz -C /usr/bin flux
 
+# crictl (сокет containerd KubeSolo: /var/lib/kubesolo/containerd/containerd.sock)
+RUN curl -fsSL "https://github.com/kubernetes-sigs/cri-tools/releases/download/${CRICTL_VERSION}/crictl-${CRICTL_VERSION}-linux-amd64.tar.gz" \
+      | tar -xz -C /usr/bin crictl
+
 #Flux
 RUN mkdir -p /usr/share/homeserver/flux && \
     curl -fsSL -o /usr/share/homeserver/flux/install.yaml \
       "https://github.com/fluxcd/flux2/releases/download/${FLUX_VERSION}/install.yaml"
 
+# zsh + Oh My Zsh
+RUN mkdir -p /usr/share/oh-my-zsh && \
+    curl -fsSL "https://github.com/ohmyzsh/ohmyzsh/archive/${OMZ_COMMIT}.tar.gz" \
+      | tar -xz --strip-components=1 -C /usr/share/oh-my-zsh
+
+COPY zsh/zshrc /etc/skel/.zshrc
+COPY zsh/core-shell.service /usr/lib/systemd/system/core-shell.service
+
+COPY --chmod=600 k8s/kubesolo-config.yaml /etc/kubesolo/config.yaml
 COPY k8s/kubesolo.service /usr/lib/systemd/system/kubesolo.service
 COPY k8s/flux-sync.yaml /usr/share/homeserver/flux/flux-sync.yaml
 COPY k8s/flux-bootstrap.service /usr/lib/systemd/system/flux-bootstrap.service
 
-RUN systemctl enable kubesolo.service flux-bootstrap.service && \
+RUN systemctl enable kubesolo.service flux-bootstrap.service core-shell.service && \
     ostree container commit

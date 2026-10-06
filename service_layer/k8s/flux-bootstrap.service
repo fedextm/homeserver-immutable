@@ -10,8 +10,11 @@ Environment=KUBECONFIG=/var/lib/kubesolo/pki/admin/admin.kubeconfig
 ExecStartPre=/bin/sh -c 'for i in $(seq 1 120); do kubectl get --raw /readyz >/dev/null 2>&1 && exit 0; sleep 5; done; exit 1'
 ExecStart=/usr/bin/kubectl apply --server-side -f /usr/share/homeserver/flux/install.yaml
 ExecStart=/usr/bin/kubectl -n flux-system wait --for=condition=Established crd/gitrepositories.source.toolkit.fluxcd.io --timeout=120s
+ExecStart=/usr/bin/kubectl -n flux-system wait --for=condition=Established crd/kustomizations.kustomize.toolkit.fluxcd.io --timeout=120s
 ExecStart=/usr/bin/kubectl apply -f /usr/share/homeserver/flux/flux-sync.yaml
 TimeoutStartSec=15min
+Restart=on-failure
+RestartSec=30s
 
 [Install]
 WantedBy=multi-user.target

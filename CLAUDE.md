@@ -79,16 +79,10 @@
 
 ### KubeSolo
 
-- Версия v1.2.0, Kubernetes 1.35.7. Однонодовый Kubernetes в одном процессе, своя встроенная containerd.
-- Флага `--config` и файла `/etc/kubesolo/config.yaml` в этой версии **нет**. Настройка через переменные окружения в `kubesolo.service`:
-  ```ini
-  Environment=KUBESOLO_PATH=/var/lib/kubesolo
-  Environment=KUBESOLO_NODE_IP=192.168.250.3
-  Environment=KUBESOLO_APISERVER_EXTRA_SANS=192.168.250.3,homeserver.local
-  Environment=KUBESOLO_LOCAL_STORAGE=true
-  Environment=KUBESOLO_DB_WAL_REPAIR=true
-  ```
-  Плюс `KillMode=process`, `Delegate=yes`, `LimitRTPRIO=70`, `LimitMEMLOCK=infinity` (лимиты наследуются контейнерами, нужны MPD).
+- Версия v1.2.1 (в образе, `ARG KUBESOLO_VERSION`). Версию Kubernetes сверять на живой ноде: `kubectl get node`. Раньше при v1.2.0 это был 1.35.7. Однонодовый Kubernetes в одном процессе, своя встроенная containerd.
+- Настройка через файл `/etc/kubesolo/config.yaml` (в репозитории `service_layer/k8s/kubesolo-config.yaml`, кладётся в образ с правами 600). Юнит запускает `kubesolo --config=/etc/kubesolo/config.yaml`. Что задано: `kubernetes.apiServer.extraSANs` (`192.168.250.3`, `homeserver.local`), `network.nodeIP`, `storage.localPath.enabled`, `storage.dbWALRepair`. Остальное по умолчанию. Проверка: `kubesolo --config=<файл> --print-config`.
+  Переменные окружения `KUBESOLO_*` и флаги **перекрывают** файл, поэтому в `kubesolo.service` их не задавать. Применяется только при перезапуске.
+  В юните остаются `KillMode=process`, `Delegate=yes`, `LimitRTPRIO=70`, `LimitMEMLOCK=infinity` (лимиты наследуются контейнерами, нужны MPD) и `After=var-mnt-data.mount`.
 - Kubeconfig: `/var/lib/kubesolo/pki/admin/admin.kubeconfig`.
 - Подов в `kube-system` мало (CoreDNS и `local-path-provisioner`): API-сервер, контроллеры и kubelet работают внутри процесса `kubesolo`. Это нормально.
 - Сеть подов: мост `cni0`, поды `10.42.0.0/16` (проверить через `kubectl get node -o jsonpath='{.items[0].spec.podCIDR}'`), сервисы `10.43.0.0/16`, CoreDNS `10.43.0.10`.
@@ -103,15 +97,9 @@ firewall-cmd --permanent --zone=trusted --add-source=10.42.0.0/16
 firewall-cmd --permanent --zone=trusted --add-source=10.43.0.0/16
 ```
 
-#### Известный баг KubeSolo v1.2.0 (важно)
+#### Исправленный баг KubeSolo v1.2.0 (#199)
 
-Функция `cleanStaleState` при каждом старте удаляет `/var/lib/kubesolo/containerd` целиком, кроме встроенных образов (issue portainer/kubesolo #197, исправлено в PR #199, влито в `develop` 29.09.2026, в релизе после v1.2.0).
-
-Последствия:
-- После каждой перезагрузки все образы из реестров скачиваются заново.
-- **`systemctl restart kubesolo` создаёт дубли всех подов**: старые контейнеры продолжают работать, новая containerd их не видит, kubelet запускает вторые копии. Два процесса пишут в одни и те же данные (SQLite Plex, Transmission, Vault) и могут их повредить.
-
-Пока не обновились: **не перезапускать сервис `kubesolo`, вместо этого перезагружать машину целиком.** После выхода исправленного релиза поднять `KUBESOLO_VERSION` в образе.
+В v1.2.0 функция `cleanStaleState` при каждом старте удаляла `/var/lib/kubesolo/containerd` целиком: образы скачивались заново после перезагрузки, а `systemctl restart kubesolo` создавал дубли всех подов (два процесса на одних данных: SQLite Plex, Transmission, Vault). Исправлено в v1.2.1 (вышел 29.09.2026). Пока образ на v1.2.0, **сервис `kubesolo` не перезапускать, только перезагружать машину целиком**. После перехода на образ с v1.2.1 перезапуск допустим, но на живом сервере сначала проверить `kubectl get pods -A` на дубли.
 
 ### Flux
 
@@ -167,7 +155,7 @@ firewall-cmd --permanent --zone=trusted --add-source=10.43.0.0/16
 
 ## Незавершённое и планы
 
-- [ ] Обновить KubeSolo до релиза с исправлением #199, после этого снова можно перезапускать сервис.
+- [x] ~~Обновить KubeSolo до релиза с исправлением #199~~ — в образе v1.2.1. Осталось применить образ на сервере (`rpm-ostree rebase`) и убедиться, что перезапуск больше не плодит дубли.
 - [x] ~~Перенести правила firewalld для `cni0` и сетей подов в `firewall/trusted.xml`~~ — уже сделано, см. `service_layer/firewall/trusted.xml`.
 - [ ] **Убрать `config.ign` из git**: сейчас закоммичены `sys_layer/config.ign` (реальный, со встроенными `.auth.json` и `password_hash`) и пустой `config.ign` в корне репозитория. Добавить оба пути в `.gitignore`, перевыпустить попавшие туда токены/пароль.
 - [ ] Манифеста Vault для Kubernetes в `apps/` пока нет вообще (решение по архитектуре — Quadlet vs Kubernetes — отложено, см. «Архитектурные оговорки»). Секреты через Vault + External Secrets Operator: план есть (три Flux Kustomization `infra-controllers` → `infra-configs` → `homeserver` с `dependsOn`, ESO через HelmRelease, `ClusterSecretStore` с auth `kubernetes` к Vault на `192.168.250.3:8200`). Отложено.
