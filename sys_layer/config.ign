@@ -69,8 +69,8 @@
       {
         "path": "/etc/NetworkManager/conf.d/90-dns-none.conf",
         "contents": {
-          "compression": "gzip",
-          "source": "data:;base64,H4sIAAAAAAAC/0zOQcrCMBAF4P1/ineBNF2UHwz0CHoBcRGSUYPmRZIRNx5eaotkVjPfwOMBgMHD69XBigZ7EH2Vett7+otUGwrPQ7S70UQ2w0IZFvrDd3KJ4jD+T9MGoVCF2tx2A4n3RHF4/wQ4Zp946iCyzUt2RzWYvHaYn1y32L0/AQAA//8Whxm3uAAAAA=="
+          "compression": "",
+          "source": "data:,%5Bmain%5D%0Adns%3Dnone%0Arc-manager%3Dunmanaged%0A"
         },
         "mode": 420
       },
@@ -90,7 +90,7 @@
         "path": "/etc/ostree/auth.json",
         "contents": {
           "compression": "",
-          "source": "data:;base64,ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6ICJabVZrWlhoMGJUcG5hSEJmU0d4UFdrZHFUbGhwU0ZsNlUyYzNOVlJqWWtrelJYaFVhWFJxZERWcE1UQm9XamhOIgoJCX0KCX0KfQ=="
+          "source": "data:;base64,ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6ICJabVZrWlhoMGJUcG5hSEJmTkhJMk9XNTBVMnRXV2xWMU5rMDNPRll3TUVFeE9FUk1PRGhUTUZJME1UbHFVMHd3IgoJCX0KCX0KfQ=="
         },
         "mode": 384
       },
@@ -141,12 +141,13 @@
         "name": "zincati.service"
       },
       {
-        "enabled": true,
-        "name": "podman-restart.service"
-      },
-      {
         "enabled": false,
         "name": "systemd-resolved.service"
+      },
+      {
+        "contents": "[Unit]\nDescription=Rebase to main image\nConditionFirstBoot=true\nAfter=network-online.target\n\n[Install]\nWantedBy=default.target\n\n[Service]\nType=oneshot\nRemainAfterExit=yes\nExecStartPre=/bin/sleep 90\nExecStart=rpm-ostree rebase --bypass-driver --reboot ostree-unverified-registry:ghcr.io/fedextm/homeserver:v1.0\n",
+        "enabled": false,
+        "name": "rebase.service"
       },
       {
         "contents": "[Unit]\nDescription=Mount Data Volume\n\n[Mount]\nWhat=/dev/mapper/vg_data-lv_data\nWhere=/var/mnt/data\nType=ext4\nOptions=nofail,noatime,discard,errors=remount-ro\n\n[Install]\nWantedBy=multi-user.target\n",
