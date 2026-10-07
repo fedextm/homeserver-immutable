@@ -7,7 +7,7 @@ DISABLE_AUTO_UPDATE="true"
 ZSH_DISABLE_COMPFIX="true"
 
 ZSH_THEME="robbyrussell"
-plugins=(git sudo kubectl flux)
+plugins=(git sudo kubectl fluxcd)
 
 source $ZSH/oh-my-zsh.sh
 
