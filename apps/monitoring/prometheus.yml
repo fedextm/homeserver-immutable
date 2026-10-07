@@ -22,3 +22,21 @@ scrape_configs:
       - targets: ['192.168.250.3:9100']
         labels:
           instance: 'homeserver'
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['192.168.250.3:8082']
+        labels:
+          instance: 'homeserver'
+    metric_relabel_configs:
+      # cAdvisor вне kubelet отдаёт имена пода/неймспейса только как container_label_*
+      - source_labels: [container_label_io_kubernetes_pod_namespace]
+        target_label: namespace
+      - source_labels: [container_label_io_kubernetes_pod_name]
+        target_label: pod
+      - source_labels: [container_label_io_kubernetes_container_name]
+        target_label: container
+  - job_name: 'kube-state-metrics'
+    static_configs:
+      - targets: ['kube-state-metrics.kube-state-metrics.svc:8080']
+        labels:
+          instance: 'homeserver'

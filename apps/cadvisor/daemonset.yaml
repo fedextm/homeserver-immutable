@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: cadvisor
+  namespace: cadvisor
+spec:
+  selector:
+    matchLabels:
+      app: cadvisor
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1   # hostNetwork: порт 8082 должен освободиться до запуска нового пода
+  template:
+    metadata:
+      labels:
+        app: cadvisor
+    spec:
+      hostNetwork: true
+      hostPID: true
+      containers:
+        - name: cadvisor
+          image: ghcr.io/google/cadvisor:v0.60.6
+          args:
+            - --port=8082
+            - --containerd=/run/containerd/containerd.sock   # встроенный containerd KubeSolo, смонтирован ниже
+            - --housekeeping_interval=30s
+            - --docker_only=false
+            - --disable_metrics=percpu,sched,tcp,udp,advtcp,referenced_memory,resctrl,cpuset,hugetlb,process
+          ports:
+            - name: metrics
+              containerPort: 8082
+          securityContext:
+            privileged: true   # доступ к cgroup и контейнерам, как у mpd/plex
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: rootfs
+              mountPath: /rootfs
+              readOnly: true
+            - name: sys
+              mountPath: /sys
+              readOnly: true
+            - name: disk
+              mountPath: /dev/disk
+              readOnly: true
+            - name: containerd-sock
+              mountPath: /run/containerd/containerd.sock
+              readOnly: true
+            - name: containerd-data
+              mountPath: /var/lib/kubesolo/containerd
+              readOnly: true
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8082
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8082
+            periodSeconds: 10
+      volumes:
+        - name: rootfs
+          hostPath:
+            path: /
+        - name: sys
+          hostPath:
+            path: /sys
+        - name: disk
+          hostPath:
+            path: /dev/disk
+        - name: containerd-sock
+          hostPath:
+            path: /var/lib/kubesolo/containerd/containerd.sock
+            type: Socket
+        - name: containerd-data
+          hostPath:
+            path: /var/lib/kubesolo/containerd
+            type: Directory

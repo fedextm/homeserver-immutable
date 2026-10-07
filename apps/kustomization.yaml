@@ -9,3 +9,5 @@ resources:
   - vault
   - monitoring
   - node-exporter
+  - cadvisor
+  - kube-state-metrics
