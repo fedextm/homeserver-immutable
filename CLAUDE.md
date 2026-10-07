@@ -49,8 +49,9 @@
 ## Уровень 1: Ignition
 
 - Собирается из Butane (`variant: fcos`, `version: 1.7.0`).
-- Секреты (`.auth.json` для ghcr.io, токены, ключи) подключаются через `local:` и **встраиваются в `config.ign`**.
-- **`config.ign` не должен лежать в git**: репозиторий публичный. Хранить только `.bu`, `config.ign` собирать локально. **Сейчас это правило нарушено**: в git закоммичены `sys_layer/config.ign` (реальный, содержит встроенные `.auth.json` и `password_hash`) и пустой `config.ign` в корне репозитория. См. TODO ниже — токены и ключи из него нужно перевыпустить.
+- Секреты (`.auth.json` для ghcr.io, токены, ключи, `age.agekey`) подключаются через `local:` и **встраиваются в `config.ign`**.
+- `age.agekey` (приватный ключ SOPS) кладётся в `/etc/homeserver/age.agekey` (0600); `flux-bootstrap.service` при каждой загрузке создаёт из него секрет `flux-system/sops-age`. На уже работающий сервер Ignition не применится, файл кладётся руками (см. README).
+- **`config.ign` не должен лежать в git**: репозиторий публичный. Хранить только `.bu`, `config.ign` собирать локально. Файлы `config.ign` убраны из индекса и добавлены в `.gitignore`, но **в истории git остался старый `sys_layer/config.ign`** со встроенными `.auth.json` (токен ghcr.io) и `password_hash`. См. TODO ниже.
 - Подводные камни Ignition на FCOS 44:
   - `primary_group` в пользователе требует, чтобы группа была объявлена в `passwd.groups`.
   - Ссылка `/etc/localtime` без `overwrite: true` падает, если файл уже есть в образе.
@@ -118,7 +119,7 @@ firewall-cmd --permanent --zone=trusted --add-source=10.43.0.0/16
 - `hostPath` с `type: Directory`: под не стартует, если диск не смонтирован, и не пишет на системный диск.
 - Healthcheck: `tcpSocket` или `httpGet` на служебный адрес, без `curl` внутри образа.
 - Логи в stdout, без `json-file`.
-- Секреты в git в открытом виде не класть. Сейчас секреты создаются вручную через `kubectl create secret`.
+- Секреты в git в открытом виде не класть. Секреты хранятся зашифрованными через SOPS + age: файлы `apps/<app>/secret.enc.yaml`, правила в `.sops.yaml` (шифруются только `data`/`stringData`). Flux расшифровывает их ключом из секрета `flux-system/sops-age` (блок `decryption` в `flux-sync.yaml`). Приватный ключ вне git: `~/.config/sops/age/keys.txt` на рабочей станции (держать резервную копию) и `sys_layer/age.agekey` (в `.gitignore`). Как добавить секрет — см. README. Пока зашифрован только `pihole-web`; остальные секреты, если есть, создавались вручную через `kubectl create secret`.
 
 | Приложение | Образ | Сеть | Особенности |
 |---|---|---|---|
@@ -128,7 +129,7 @@ firewall-cmd --permanent --zone=trusted --add-source=10.43.0.0/16
 | `pihole` | `docker.io/pihole/pihole:2026.04.1` | `hostNetwork`, `dnsPolicy: Default` | DNS + DHCP, `NET_ADMIN`, `SYS_TIME`, `SYS_NICE`; пароль из секрета `pihole-web` |
 | `backup` | `docker.io/library/alpine:3.24` | — | CronJob 03:30 Europe/Warsaw, `rsync` ставится в самом job'е (`apk add --no-cache rsync` при каждом запуске, не запечён в образ), см. ниже |
 
-`vault` в `apps/` и в `apps/kustomization.yaml` сейчас нет вообще — манифеста для него ещё не существует (архитектурное решение Kubernetes/Podman Quadlet отложено, см. TODO и «Архитектурные оговорки»).
+`vault` (`docker.io/hashicorp/vault:2.1.1`, Service LoadBalancer, данные в `hostPath /var/mnt/data/ct_data/vault/data`, `api_addr = http://192.168.250.3:8200`) есть в `apps/vault/` и в `apps/kustomization.yaml`. Решение Kubernetes vs Podman Quadlet формально не закрыто, см. «Архитектурные оговорки».
 
 #### Бэкап `/var/mnt/data` → `/var/mnt/mirror`
 
@@ -141,9 +142,9 @@ firewall-cmd --permanent --zone=trusted --add-source=10.43.0.0/16
 
 ### Архитектурные оговорки
 
-- **Pi-hole и Vault лучше держать на Podman Quadlet, а не в Kubernetes.** Pi-hole раздаёт DNS и DHCP всей сети, а KubeSolo после перезагрузки поднимается минутами, пока сеть сидит без DNS. Vault не должен зависеть от кластера, которому выдаёт секреты. Манифест Pi-hole в Kubernetes сделан по просьбе владельца; манифеста Vault для Kubernetes в репозитории пока нет вообще — решение, в какую сторону делать (Quadlet или Kubernetes), ещё не принято.
+- **Pi-hole и Vault лучше держать на Podman Quadlet, а не в Kubernetes.** Pi-hole раздаёт DNS и DHCP всей сети, а KubeSolo после перезагрузки поднимается минутами, пока сеть сидит без DNS. Vault не должен зависеть от кластера, которому выдаёт секреты. Манифест Pi-hole в Kubernetes сделан по просьбе владельца; манифест Vault для Kubernetes в репозитории уже есть и работает, но решение, остаётся ли он в Kubernetes или уходит в Quadlet, ещё не принято.
 - KubeSolo официально не рекомендует соседство с другими контейнерными движками, а в FCOS встроен Podman. Пока конфликтов не замечено.
-- Манифеста Vault для Kubernetes в `apps/` пока нет (см. TODO). Когда он появится: после каждого перезапуска пода Vault будет запечатан — `kubectl -n vault exec -it deploy/vault -- vault operator unseal` (по порогу ключей).
+- После каждого перезапуска пода Vault запечатан — `kubectl -n vault exec -it deploy/vault -- vault operator unseal` (по порогу ключей).
 - В libvirt-сети, где живёт ВМ, может работать встроенный dnsmasq с DHCP. Он конфликтует с Pi-hole: убрать блок `<dhcp>` через `virsh net-edit` на хосте или перевести ВМ на мост к физической сети.
 
 ## Образы, которые собираются из этого репозитория
@@ -157,10 +158,12 @@ firewall-cmd --permanent --zone=trusted --add-source=10.43.0.0/16
 
 - [x] ~~Обновить KubeSolo до релиза с исправлением #199~~ — в образе v1.2.1. Осталось применить образ на сервере (`rpm-ostree rebase`) и убедиться, что перезапуск больше не плодит дубли.
 - [x] ~~Перенести правила firewalld для `cni0` и сетей подов в `firewall/trusted.xml`~~ — уже сделано, см. `service_layer/firewall/trusted.xml`.
-- [ ] **Убрать `config.ign` из git**: сейчас закоммичены `sys_layer/config.ign` (реальный, со встроенными `.auth.json` и `password_hash`) и пустой `config.ign` в корне репозитория. Добавить оба пути в `.gitignore`, перевыпустить попавшие туда токены/пароль.
-- [ ] Манифеста Vault для Kubernetes в `apps/` пока нет вообще (решение по архитектуре — Quadlet vs Kubernetes — отложено, см. «Архитектурные оговорки»). Секреты через Vault + External Secrets Operator: план есть (три Flux Kustomization `infra-controllers` → `infra-configs` → `homeserver` с `dependsOn`, ESO через HelmRelease, `ClusterSecretStore` с auth `kubernetes` к Vault на `192.168.250.3:8200`). Отложено.
-- [ ] Альтернатива для секретов в git — SOPS + age.
-- [ ] Когда манифест Vault появится в `apps/`: закрепить версию образа, `api_addr` на реальный адрес, подумать о TLS и auto-unseal.
+- [x] ~~Убрать `config.ign` из git~~ — убран из индекса, добавлен в `.gitignore`.
+- [ ] Перевыпустить токен ghcr.io из `.auth.json` (остался в истории git; `password_hash` не критичен — вход по паролю закрыт, SSH только по ключам). Решить, чистить ли историю (`git filter-repo` + force-push).
+- [ ] Положить `age.agekey` на работающий сервер в `/etc/homeserver/age.agekey` до rebase на образ с новым `flux-bootstrap.service`, иначе юнит не дойдёт до `flux-sync.yaml`. Сделать резервную копию ключа age.
+- [ ] Секреты через Vault + External Secrets Operator: план есть (три Flux Kustomization `infra-controllers` → `infra-configs` → `homeserver` с `dependsOn`, ESO через HelmRelease, `ClusterSecretStore` с auth `kubernetes` к Vault на `192.168.250.3:8200`). Отложено.
+- [x] ~~Секреты в git через SOPS + age~~ — настроено (Pi-hole). Перенести остальные секреты, если они есть.
+- [ ] Vault: подумать о TLS и auto-unseal (версия образа закреплена, `api_addr` задан).
 - [ ] Сборку образов (особенно MPD) перенести в GitHub Actions. В `sys_layer/actions-runner.service` уже лежит юнит self-hosted runner'а, но он не подключён через `sys_layer/config.yml` (Butane) — пока не включается при первой загрузке. Также непонятно, где сейчас фактически собираются образы MPD/Transmission — Containerfile для них в этом репозитории не найден (см. раздел выше).
 - [ ] Renovate для обновления тегов образов и Helm-чартов.
 - [ ] Restic для версионированных бэкапов конфигов и баз (в дополнение к rsync-зеркалу).
