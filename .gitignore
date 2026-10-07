@@ -403,3 +403,10 @@ FodyWeavers.xsd
 # Disable sensitive files
 .auth.json
 passwd-s3fs
+
+# SOPS/age private keys
+keys.txt
+*.agekey
+
+# Ignition builds embed secrets
+config.ign

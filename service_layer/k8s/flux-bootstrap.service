@@ -11,6 +11,7 @@ ExecStartPre=/bin/sh -c 'for i in $(seq 1 120); do kubectl get --raw /readyz >/d
 ExecStart=/usr/bin/kubectl apply --server-side -f /usr/share/homeserver/flux/install.yaml
 ExecStart=/usr/bin/kubectl -n flux-system wait --for=condition=Established crd/gitrepositories.source.toolkit.fluxcd.io --timeout=120s
 ExecStart=/usr/bin/kubectl -n flux-system wait --for=condition=Established crd/kustomizations.kustomize.toolkit.fluxcd.io --timeout=120s
+ExecStart=/bin/sh -c 'kubectl -n flux-system create secret generic sops-age --from-file=age.agekey=/etc/homeserver/age.agekey --dry-run=client -o yaml | kubectl apply -f -'
 ExecStart=/usr/bin/kubectl apply -f /usr/share/homeserver/flux/flux-sync.yaml
 TimeoutStartSec=15min
 Restart=on-failure

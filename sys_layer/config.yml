@@ -77,6 +77,10 @@ storage:
       mode: 0600
       contents:
         local: .auth.json
+    - path: /etc/homeserver/age.agekey
+      mode: 0600
+      contents:
+        local: age.agekey
     - path: /etc/hostname
       mode: 0644
       overwrite: true
