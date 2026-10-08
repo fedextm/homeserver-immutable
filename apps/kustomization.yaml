@@ -9,5 +9,6 @@ resources:
   - vault
   - monitoring
   - node-exporter
-  - cadvisor
-  - kube-state-metrics
+  # Temporarily disabled due to high resource usage 
+  # - cadvisor
+  # - kube-state-metrics
