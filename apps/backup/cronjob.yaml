@@ -35,8 +35,6 @@ spec:
                   rc=0
                   rsync -aHAX --numeric-ids --delete --stats \
                     --exclude=lost+found \
-                    --exclude=plex_backup \
-                    --exclude=plexmediaserver \
                     --exclude=films \
                     --exclude=downloads \
                     /src/ /dst/ || rc=$?
