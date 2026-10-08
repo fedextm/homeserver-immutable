@@ -1,0 +1,8 @@
+[sshd]
+enabled  = true
+backend  = systemd
+maxretry = 3
+findtime = 10m
+bantime  = 1h
+# LAN, сети подов и WireGuard не банить
+ignoreip = 127.0.0.1/8 ::1 192.168.3.0/24 192.168.250.0/24 10.42.0.0/16 10.8.0.0/24
