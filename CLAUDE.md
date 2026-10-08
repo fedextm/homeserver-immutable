@@ -19,9 +19,9 @@
 ## Хост
 
 - ОС: Fedora CoreOS 44, поток stable. Работает как ВМ под libvirt/QEMU (диск `vda`).
-- Имя: `homeserver.local`. Основной IP: `192.168.250.3` (`eth1`).
+- Имя: `homeserver.local`. Основной IP: `192.168.3.201` (`eth1`).
 - `eth0`: зона firewalld `public`, `192.168.122.3/24`, шлюз в конфиге не задан (похоже на дефолтную NAT-сеть libvirt). Наружу из публичной зоны открыты только ssh, https, `51413/tcp+udp` (transmission) и `32400/tcp` (plex) — см. `service_layer/firewall/public.xml`.
-- `eth1`: зона firewalld `trusted`, `192.168.250.3/24`, шлюз `192.168.250.1`. Это основная домашняя LAN; здесь же Pi-hole раздаёт DHCP (`192.168.250.100`–`192.168.250.110`, клиентам роутером объявляется `192.168.250.3`).
+- `eth1`: зона firewalld `trusted`, `192.168.3.201/24`, шлюз `192.168.3.201`. Это основная домашняя LAN; здесь же Pi-hole раздаёт DHCP (`192.168.3.50`–`192.168.3.199`, клиентам роутером объявляется `192.168.3.201`).
 - Интерфейсы называются `eth0`, `eth1` (в аргументах ядра `net.ifnames=0 biosdevname=0`).
 - Аргументы ядра: `mitigations=off`, `selinux=0`, `audit=0`. SELinux выключен, поэтому `:z`/`:Z` на томах ничего не делают.
 - `systemd-resolved` выключен. `/etc/resolv.conf` — обычный файл (`overwrite: true` в Ignition), `search lan` + `nameserver 8.8.8.8`. NetworkManager не трогает его благодаря drop-in с `dns=none` и `rc-manager=unmanaged`.
@@ -81,7 +81,7 @@
 ### KubeSolo
 
 - Версия v1.2.1 (в образе, `ARG KUBESOLO_VERSION`). Версию Kubernetes сверять на живой ноде: `kubectl get node`. Раньше при v1.2.0 это был 1.35.7. Однонодовый Kubernetes в одном процессе, своя встроенная containerd.
-- Настройка через файл `/etc/kubesolo/config.yaml` (в репозитории `service_layer/k8s/kubesolo-config.yaml`, кладётся в образ с правами 600). Юнит запускает `kubesolo --config=/etc/kubesolo/config.yaml`. Что задано: `kubernetes.apiServer.extraSANs` (`192.168.250.3`, `homeserver.local`), `network.nodeIP`, `storage.localPath.enabled`, `storage.dbWALRepair`. Остальное по умолчанию. Проверка: `kubesolo --config=<файл> --print-config`.
+- Настройка через файл `/etc/kubesolo/config.yaml` (в репозитории `service_layer/k8s/kubesolo-config.yaml`, кладётся в образ с правами 600). Юнит запускает `kubesolo --config=/etc/kubesolo/config.yaml`. Что задано: `kubernetes.apiServer.extraSANs` (`192.168.3.201`, `homeserver.local`), `network.nodeIP`, `storage.localPath.enabled`, `storage.dbWALRepair`. Остальное по умолчанию. Проверка: `kubesolo --config=<файл> --print-config`.
   Переменные окружения `KUBESOLO_*` и флаги **перекрывают** файл, поэтому в `kubesolo.service` их не задавать. Применяется только при перезапуске.
   В юните остаются `KillMode=process`, `Delegate=yes`, `LimitRTPRIO=70`, `LimitMEMLOCK=infinity` (лимиты наследуются контейнерами, нужны MPD) и `After=var-mnt-data.mount`.
 - Kubeconfig: `/var/lib/kubesolo/pki/admin/admin.kubeconfig`.
@@ -129,7 +129,7 @@ firewall-cmd --permanent --zone=trusted --add-source=10.43.0.0/16
 | `pihole` | `docker.io/pihole/pihole:2026.04.1` | `hostNetwork`, `dnsPolicy: Default` | DNS + DHCP, `NET_ADMIN`, `SYS_TIME`, `SYS_NICE`; пароль из секрета `pihole-web` |
 | `backup` | `docker.io/library/alpine:3.24` | — | CronJob 03:30 Europe/Warsaw, `rsync` ставится в самом job'е (`apk add --no-cache rsync` при каждом запуске, не запечён в образ), см. ниже |
 
-`vault` (`docker.io/hashicorp/vault:2.1.1`, Service LoadBalancer, данные в `hostPath /var/mnt/data/ct_data/vault/data`, `api_addr = http://192.168.250.3:8200`) есть в `apps/vault/` и в `apps/kustomization.yaml`. Решение Kubernetes vs Podman Quadlet формально не закрыто, см. «Архитектурные оговорки».
+`vault` (`docker.io/hashicorp/vault:2.1.1`, Service LoadBalancer, данные в `hostPath /var/mnt/data/ct_data/vault/data`, `api_addr = http://192.168.3.201:8200`) есть в `apps/vault/` и в `apps/kustomization.yaml`. Решение Kubernetes vs Podman Quadlet формально не закрыто, см. «Архитектурные оговорки».
 
 #### Бэкап `/var/mnt/data` → `/var/mnt/mirror`
 
@@ -161,7 +161,7 @@ firewall-cmd --permanent --zone=trusted --add-source=10.43.0.0/16
 - [x] ~~Убрать `config.ign` из git~~ — убран из индекса, добавлен в `.gitignore`.
 - [ ] Перевыпустить токен ghcr.io из `.auth.json` (остался в истории git; `password_hash` не критичен — вход по паролю закрыт, SSH только по ключам). Решить, чистить ли историю (`git filter-repo` + force-push).
 - [ ] Положить `age.agekey` на работающий сервер в `/etc/homeserver/age.agekey` до rebase на образ с новым `flux-bootstrap.service`, иначе юнит не дойдёт до `flux-sync.yaml`. Сделать резервную копию ключа age.
-- [ ] Секреты через Vault + External Secrets Operator: план есть (три Flux Kustomization `infra-controllers` → `infra-configs` → `homeserver` с `dependsOn`, ESO через HelmRelease, `ClusterSecretStore` с auth `kubernetes` к Vault на `192.168.250.3:8200`). Отложено.
+- [ ] Секреты через Vault + External Secrets Operator: план есть (три Flux Kustomization `infra-controllers` → `infra-configs` → `homeserver` с `dependsOn`, ESO через HelmRelease, `ClusterSecretStore` с auth `kubernetes` к Vault на `192.168.3.201:8200`). Отложено.
 - [x] ~~Секреты в git через SOPS + age~~ — настроено (Pi-hole). Перенести остальные секреты, если они есть.
 - [ ] Vault: подумать о TLS и auto-unseal (версия образа закреплена, `api_addr` задан).
 - [ ] Сборку образов (особенно MPD) перенести в GitHub Actions. В `sys_layer/actions-runner.service` уже лежит юнит self-hosted runner'а, но он не подключён через `sys_layer/config.yml` (Butane) — пока не включается при первой загрузке. Также непонятно, где сейчас фактически собираются образы MPD/Transmission — Containerfile для них в этом репозитории не найден (см. раздел выше).

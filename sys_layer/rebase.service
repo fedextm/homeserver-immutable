@@ -10,4 +10,4 @@ WantedBy=default.target
 Type=oneshot
 RemainAfterExit=yes
 ExecStartPre=/bin/sleep 90
-ExecStart=rpm-ostree rebase --bypass-driver --reboot ostree-unverified-registry:ghcr.io/fedextm/homeserver:v1.0
+ExecStart=rpm-ostree rebase --bypass-driver --reboot ostree-unverified-registry:ghcr.io/fedextm/homeserver:v1.1

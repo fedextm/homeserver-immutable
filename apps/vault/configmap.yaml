@@ -14,7 +14,7 @@ data:
       tls_disable = true
     }
 
-    api_addr          = "http://192.168.250.3:8200"
+    api_addr          = "http://192.168.3.201:8200"
     ui                = true
     disable_mlock     = true
     default_lease_ttl = "168h"

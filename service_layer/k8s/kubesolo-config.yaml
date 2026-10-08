@@ -6,11 +6,11 @@ path: /var/lib/kubesolo
 kubernetes:
   apiServer:
     extraSANs:
-      - 192.168.250.3
+      - 192.168.3.201
       - homeserver.local
 
 network:
-  nodeIP: 192.168.250.3
+  nodeIP: 192.168.3.201
 
 storage:
   localPath:

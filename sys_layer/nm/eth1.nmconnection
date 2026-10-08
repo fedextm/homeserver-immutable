@@ -1,12 +1,11 @@
-            [connection]
-            id=eth1
-            type=ethernet
-            interface-name=eth1
-            zone=trusted
-            [ipv4]
-            address1=192.168.250.3/24
-            gateway=192.168.250.1
-            method=manual
-            [ipv6]
-            addr-gen-mode=default
-            method=disabled
+[connection]
+id=eth1
+type=ethernet
+interface-name=eth1
+zone=trusted
+[ipv4]
+address1=192.168.3.201/24
+method=manual
+[ipv6]
+addr-gen-mode=default
+method=disabled

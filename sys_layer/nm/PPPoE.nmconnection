@@ -9,8 +9,8 @@ mru=1492
 mtu=1492
 
 [pppoe]
-password=*
-username=*
+password=LW7dneFB
+username=4dkeeitr@bn24.pl
 
 [ipv4]
 ignore-auto-dns=true

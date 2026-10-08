@@ -29,7 +29,7 @@ spec:
             - name: CHANGE_CONFIG_DIR_OWNERSHIP
               value: "false"
             - name: ALLOWED_NETWORKS
-              value: 192.168.250.0/24
+              value: 192.168.3.0/24
             # - name: PLEX_CLAIM
             #   value: claim-xxxxxx
           securityContext:
