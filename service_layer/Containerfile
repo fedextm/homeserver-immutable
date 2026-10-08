@@ -14,6 +14,8 @@ RUN dnf install -y --setopt=install_weak_deps=False \
         cockpit-system \
         cockpit-networkmanager \
         cockpit-storaged \
+        NetworkManager-ppp \
+        ppp \
         samba \
         nfs-utils \
         fail2ban \

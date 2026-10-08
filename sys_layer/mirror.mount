@@ -4,8 +4,8 @@ Description=Mount Data Volume
 [Mount]
 What=/dev/mapper/vg_backup-lv_backup
 Where=/var/mnt/mirror
-Type=ext4
-Options=nofail,noatime,discard,errors=remount-ro
+Type=xfs
+Options=nofail,noatime,discard
 
 [Install]
 WantedBy=multi-user.target
