@@ -13,3 +13,4 @@ resources:
   # - cadvisor
   # - kube-state-metrics
   - calibre-web
+  - caddy

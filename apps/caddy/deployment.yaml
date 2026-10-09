@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: caddy
+  namespace: caddy
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate   # hostNetwork: порты 80/443 должны освободиться до запуска нового пода
+  selector:
+    matchLabels:
+      app: caddy
+  template:
+    metadata:
+      labels:
+        app: caddy
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet   # чтобы резолвились имена сервисов кластера
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+      containers:
+        - name: caddy
+          image: docker.io/library/caddy:2.11.7
+          ports:
+            - name: http
+              containerPort: 80
+            - name: https
+              containerPort: 443
+          securityContext:
+            allowPrivilegeEscalation: true   # нужно для file capability на /usr/bin/caddy (порты <1024)
+            capabilities:
+              drop: ["ALL"]
+              add: ["NET_BIND_SERVICE"]
+          env:
+            - name: TZ
+              value: Europe/Warsaw
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          volumeMounts:
+            - name: caddyfile
+              mountPath: /etc/caddy/Caddyfile
+              subPath: Caddyfile
+              readOnly: true
+            - name: data
+              mountPath: /data
+            - name: config
+              mountPath: /config
+          livenessProbe:
+            tcpSocket:
+              port: 443
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          readinessProbe:
+            tcpSocket:
+              port: 443
+            periodSeconds: 10
+      volumes:
+        - name: caddyfile
+          configMap:
+            name: caddy-config
+        - name: data
+          hostPath:
+            path: /var/mnt/data/ct_data/caddy/data
+            type: Directory
+        - name: config
+          hostPath:
+            path: /var/mnt/data/ct_data/caddy/config
+            type: Directory

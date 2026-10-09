@@ -1,0 +1,4 @@
+books.slyfox.site {
+	encode zstd gzip
+	reverse_proxy calibre-web.calibre-web.svc.cluster.local:8083
+}
