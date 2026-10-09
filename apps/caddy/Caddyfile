@@ -1,4 +1,30 @@
 books.slyfox.site {
 	encode zstd gzip
+
+	# access-лог в файл на hostPath: его читает fail2ban на хосте
+	# (/var/mnt/data/ct_data/caddy/data/logs/access.log)
+	log {
+		output file /data/logs/access.log {
+			roll_size 10MiB
+			roll_keep 5
+		}
+		format json {
+			time_format iso8601   # fail2ban сам разбирает ISO 8601; epoch в середине строки он не понимает
+			time_local
+		}
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		X-Frame-Options SAMEORIGIN
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+
+	request_body {
+		max_size 10MB   # загрузки книг в calibre-web выключены
+	}
+
 	reverse_proxy calibre-web.calibre-web.svc.cluster.local:8083
 }

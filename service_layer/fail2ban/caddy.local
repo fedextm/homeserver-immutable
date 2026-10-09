@@ -1,0 +1,24 @@
+[DEFAULT]
+# LAN, сети подов и WireGuard не банить
+ignoreip = 127.0.0.1/8 ::1 192.168.3.0/24 192.168.250.0/24 10.42.0.0/16 10.8.0.0/24
+
+[caddy-calibre-login]
+enabled  = true
+port     = http,https
+filter   = caddy-calibre-login
+logpath  = /var/mnt/data/ct_data/caddy/data/logs/access.log
+maxretry = 5
+findtime = 10m
+bantime  = 1h
+
+[caddy-scan]
+enabled  = true
+port     = http,https
+filter   = caddy-scan
+logpath  = /var/mnt/data/ct_data/caddy/data/logs/access.log
+maxretry = 20
+findtime = 1m
+bantime  = 24h
+
+[recidive]
+enabled  = true

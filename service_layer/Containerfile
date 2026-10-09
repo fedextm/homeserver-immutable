@@ -105,6 +105,8 @@ RUN mkdir -p /usr/share/oh-my-zsh && \
       | tar -xz --strip-components=1 -C /usr/share/oh-my-zsh
 
 COPY fail2ban/sshd.local /etc/fail2ban/jail.d/sshd.local
+COPY fail2ban/caddy.local /etc/fail2ban/jail.d/caddy.local
+COPY fail2ban/filter.d/ /etc/fail2ban/filter.d/
 COPY --chmod=600 ssh/01-hardening.conf /etc/ssh/sshd_config.d/01-hardening.conf
 COPY zsh/zshrc /etc/skel/.zshrc
 COPY zsh/core-shell.service /usr/lib/systemd/system/core-shell.service
