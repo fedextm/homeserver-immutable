@@ -12,3 +12,4 @@ resources:
   # Temporarily disabled due to high resource usage 
   # - cadvisor
   # - kube-state-metrics
+  - calibre-web

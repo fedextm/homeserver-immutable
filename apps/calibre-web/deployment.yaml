@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: calibre-web
+  namespace: calibre-web
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: calibre-web
+  template:
+    metadata:
+      labels:
+        app: calibre-web
+    spec:
+      containers:
+        - name: calibre-web
+          # образ linuxserver стартует от root (s6) и сам переключается на PUID/PGID
+          image: ghcr.io/linuxserver/calibre-web:0.6.27-ls404
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: TZ
+              value: Europe/Warsaw
+          ports:
+            - name: web
+              containerPort: 8083
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          volumeMounts:
+            # библиотека (metadata.db) и app.db лежат вместе; в app.db путь библиотеки = /config
+            - name: config
+              mountPath: /config
+          livenessProbe:
+            tcpSocket:
+              port: 8083
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            failureThreshold: 3
+          readinessProbe:
+            tcpSocket:
+              port: 8083
+            periodSeconds: 10
+      volumes:
+        - name: config
+          hostPath:
+            path: /var/mnt/data/ct_data/calibre-web
+            type: Directory
