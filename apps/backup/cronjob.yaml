@@ -27,8 +27,8 @@ spec:
               args:
                 - |
                   set -eu
-                  [ -f /src/.mirror-source ] || { echo "Source disk not mounted, aborting"; exit 1; }
-                  [ -f /dst/.mirror-target ] || { echo "Mirror disk not mounted, aborting"; exit 1; }
+                  [ -f /src/.mounted ] || { echo "Source disk not mounted, aborting"; exit 1; }
+                  [ -f /dst/.mounted ] || { echo "Mirror disk not mounted, aborting"; exit 1; }
 
                   apk add --no-cache -q rsync
 
