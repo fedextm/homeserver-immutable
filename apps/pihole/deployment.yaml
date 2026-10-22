@@ -19,7 +19,7 @@ spec:
       dnsPolicy: Default          # сам Pi-hole не должен зависеть от CoreDNS
       containers:
         - name: pihole
-          image: docker.io/pihole/pihole:2026.04.1
+          image: docker.io/pihole/pihole:2026.10.0
           env:
             - name: TZ
               value: Europe/Warsaw
