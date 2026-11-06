@@ -23,7 +23,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: transmission
-          image: ghcr.io/fedextm/transmission:v4.1.4
+          image: ghcr.io/fedextm/transmission:4.1.4
           ports:
             - name: web
               containerPort: 9091
