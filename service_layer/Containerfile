@@ -1,11 +1,9 @@
 FROM quay.io/fedora/fedora-coreos:stable
 
-ARG KUBESOLO_VERSION=v1.2.1
-ARG FLUX_VERSION=v2.9.6
-ARG KUBECTL_VERSION=v1.35.9
-ARG CRICTL_VERSION=v1.35.0
-# у Oh My Zsh нет релизов, версия закреплена коммитом
-ARG OMZ_COMMIT=60c9a7a839b790cd905d0fd4419435124fd1bdc0
+ARG KUBESOLO_VERSION=v1.2.3
+ARG FLUX_VERSION=v2.10.0
+ARG KUBECTL_VERSION=v1.37.2
+ARG CRICTL_VERSION=v1.37.0
 
 RUN dnf install -y --setopt=install_weak_deps=False \
         flatpak \
@@ -100,7 +98,7 @@ RUN mkdir -p /usr/share/homeserver/flux && \
 
 # zsh + Oh My Zsh
 RUN mkdir -p /usr/share/oh-my-zsh && \
-    curl -fsSL "https://github.com/ohmyzsh/ohmyzsh/archive/${OMZ_COMMIT}.tar.gz" \
+    curl -fsSL "https://github.com/ohmyzsh/ohmyzsh/archive/refs/heads/master.tar.gz" \
       | tar -xz --strip-components=1 -C /usr/share/oh-my-zsh
 
 COPY fail2ban/sshd.local /etc/fail2ban/jail.d/sshd.local
