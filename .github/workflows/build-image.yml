@@ -1,0 +1,66 @@
+name: Build homeserver image
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'service_layer/**'
+      - '.github/workflows/build-image.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: build-image
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/fedextm/homeserver
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # push git-тега версии
+      packages: write   # push в ghcr.io
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Версия по тегам vX.Y.Z; [bump:major] / [bump:minor] в сообщении коммита, иначе patch
+      - name: Compute version
+        id: ver
+        env:
+          MSG: ${{ github.event.head_commit.message }}
+        run: |
+          last=$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1)
+          last=${last:-v0.0.0}
+          IFS=. read -r major minor patch <<< "${last#v}"
+          if   [[ "$MSG" == *"[bump:major]"* ]]; then major=$((major+1)); minor=0; patch=0
+          elif [[ "$MSG" == *"[bump:minor]"* ]]; then minor=$((minor+1)); patch=0
+          else patch=$((patch+1)); fi
+          echo "version=v${major}.${minor}.${patch}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: service_layer
+          file: service_layer/Containerfile
+          push: true
+          provenance: false
+          tags: |
+            ${{ env.IMAGE }}:${{ steps.ver.outputs.version }}
+            ${{ env.IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Tag release
+        run: |
+          git tag "${{ steps.ver.outputs.version }}"
+          git push origin "${{ steps.ver.outputs.version }}"
