@@ -81,6 +81,10 @@ storage:
       mode: 0600
       contents:
         local: age.agekey
+    - path: /etc/passwd-s3fs
+      mode: 0600
+      contents:
+        local: passwd-s3fs
     - path: /etc/hostname
       mode: 0644
       overwrite: true
