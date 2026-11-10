@@ -23,7 +23,7 @@ spec:
         fsGroupChangePolicy: OnRootMismatch
       containers:
         - name: mpd
-          image: ghcr.io/fedextm/mpd:v0.24.15
+          image: ghcr.io/fedextm/mpd:0.24.18
           env:
             - name: TZ
               value: Europe/Warsaw
