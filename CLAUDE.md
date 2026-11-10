@@ -18,9 +18,12 @@
 
 ## Хост
 
-- ОС: Fedora CoreOS 44, поток stable. Работает как ВМ под libvirt/QEMU (диск `vda`).
+- ОС: Fedora CoreOS 44, поток stable. Работает на физическом железе (не ВМ), UEFI.
+- Железо (снято с сервера 10.11.2026): мини-ПК на плате Intel Jasper Lake (`JSL MRD`, прошивка T8PRO001 от 25.10.2022), CPU Intel Celeron N5095 (4 ядра, 2.0 ГГц, без HT), 7.6 ГиБ ОЗУ + zram-своп 3.8 ГиБ, графика UHD (Jasper Lake, `/dev/dri/renderD128` — для транскодинга Plex), встроенный HD Audio (`/dev/snd`, для MPD), две сетевые карты Realtek RTL8111/8168 (`eth0`, `eth1`) и Wi-Fi RTL8821CE (не используется).
+- Накопители: системный SSD `sda` 238.5 ГБ (N900-256, `/boot`, `/sysroot`); данные — LVM `vg_data` из трёх HDD (`sdc` 1.9 ТБ, `sdd` 1.8 ТБ, `sde` 1.8 ТБ, итого 5.5 ТБ); зеркало — LVM `vg_backup` на одном HDD `sdb` Seagate FireCuda 4.5 ТБ. Диски называются `sdX`, а не `vda`; порядок букв может меняться между загрузками, поэтому в конфигах использовать пути LVM (`/dev/mapper/...`), а не `/dev/sdX`.
 - Имя: `homeserver.local`. Основной IP: `192.168.3.201` (`eth1`).
-- `eth0`: зона firewalld `public`, `192.168.122.3/24`, шлюз в конфиге не задан (похоже на дефолтную NAT-сеть libvirt). Наружу из публичной зоны открыты только ssh, https, `51413/tcp+udp` (transmission) и `32400/tcp` (plex) — см. `service_layer/firewall/public.xml`.
+- Выход в интернет: через DSL-модем по PPPoE. Физический `eth0` (MTU 1492, без IP, `never-default`, зона `public`) смотрит в модем, поверх него NetworkManager поднимает соединение `PPPoE` (интерфейс `ppp0`, MRU/MTU 1492, зона `public`). Внешний адрес и шлюз по умолчанию (`default via ... dev ppp0`) выдаёт провайдер, адрес динамический. Логин и пароль PPPoE лежат в `sys_layer/nm/PPPoE.nmconnection` (секрет, встраивается в `config.ign`, в git не попадает).
+- Зона `public` (интерфейс `ppp0`) — внешняя. Наружу открыты только ssh, https, `51413/tcp+udp` (transmission) и `32400/tcp` (plex), включены `masquerade` и `forward` — см. `service_layer/firewall/public.xml`. На живой машине в этой зоне есть ещё rich-правила `reject` для отдельных адресов (добавлены в рантайме, в образ не зашиты).
 - `eth1`: зона firewalld `trusted`, `192.168.3.201/24`, шлюз `192.168.3.201`. Это основная домашняя LAN; здесь же Pi-hole раздаёт DHCP (`192.168.3.50`–`192.168.3.199`, клиентам роутером объявляется `192.168.3.201`).
 - Интерфейсы называются `eth0`, `eth1` (в аргументах ядра `net.ifnames=0 biosdevname=0`).
 - Аргументы ядра: `mitigations=off`, `selinux=0`, `audit=0`. SELinux выключен, поэтому `:z`/`:Z` на томах ничего не делают.
@@ -80,7 +83,7 @@
 
 ### KubeSolo
 
-- Версия v1.2.1 (в образе, `ARG KUBESOLO_VERSION`). Версию Kubernetes сверять на живой ноде: `kubectl get node`. Раньше при v1.2.0 это был 1.35.7. Однонодовый Kubernetes в одном процессе, своя встроенная containerd.
+- Версия v1.2.3 (в образе, `ARG KUBESOLO_VERSION`), на ноде Kubernetes 1.35.7 (проверено 10.11.2026). Версию сверять на живой ноде: `kubectl get node`. `kubectl` в образе новее сервера (1.37 против 1.35), это за пределами допустимого перекоса версий. Однонодовый Kubernetes в одном процессе, своя встроенная containerd.
 - Настройка через файл `/etc/kubesolo/config.yaml` (в репозитории `service_layer/k8s/kubesolo-config.yaml`, кладётся в образ с правами 600). Юнит запускает `kubesolo --config=/etc/kubesolo/config.yaml`. Что задано: `kubernetes.apiServer.extraSANs` (`192.168.3.201`, `homeserver.local`), `network.nodeIP`, `storage.localPath.enabled`, `storage.dbWALRepair`. Остальное по умолчанию. Проверка: `kubesolo --config=<файл> --print-config`.
   Переменные окружения `KUBESOLO_*` и флаги **перекрывают** файл, поэтому в `kubesolo.service` их не задавать. Применяется только при перезапуске.
   В юните остаются `KillMode=process`, `Delegate=yes`, `LimitRTPRIO=70`, `LimitMEMLOCK=infinity` (лимиты наследуются контейнерами, нужны MPD) и `After=var-mnt-data.mount`.
@@ -145,7 +148,6 @@ firewall-cmd --permanent --zone=trusted --add-source=10.43.0.0/16
 - **Pi-hole и Vault лучше держать на Podman Quadlet, а не в Kubernetes.** Pi-hole раздаёт DNS и DHCP всей сети, а KubeSolo после перезагрузки поднимается минутами, пока сеть сидит без DNS. Vault не должен зависеть от кластера, которому выдаёт секреты. Манифест Pi-hole в Kubernetes сделан по просьбе владельца; манифест Vault для Kubernetes в репозитории уже есть и работает, но решение, остаётся ли он в Kubernetes или уходит в Quadlet, ещё не принято.
 - KubeSolo официально не рекомендует соседство с другими контейнерными движками, а в FCOS встроен Podman. Пока конфликтов не замечено.
 - После каждого перезапуска пода Vault запечатан — `kubectl -n vault exec -it deploy/vault -- vault operator unseal` (по порогу ключей).
-- В libvirt-сети, где живёт ВМ, может работать встроенный dnsmasq с DHCP. Он конфликтует с Pi-hole: убрать блок `<dhcp>` через `virsh net-edit` на хосте или перевести ВМ на мост к физической сети.
 
 ## Образы, которые собираются из этого репозитория
 
