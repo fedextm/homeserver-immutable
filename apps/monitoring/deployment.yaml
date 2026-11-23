@@ -21,7 +21,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: prometheus
-          image: docker.io/prom/prometheus:v3.10.0
+          image: docker.io/prom/prometheus:v3.16.0
           ports:
             - name: prometheus
               containerPort: 9090
@@ -55,7 +55,7 @@ spec:
               port: 9090
             periodSeconds: 10
         - name: grafana
-          image: docker.io/grafana/grafana:12.1.1
+          image: docker.io/grafana/grafana:13.3.1
           ports:
             - name: grafana
               containerPort: 3000
