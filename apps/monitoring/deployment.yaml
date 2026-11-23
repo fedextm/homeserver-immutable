@@ -59,6 +59,37 @@ spec:
           ports:
             - name: grafana
               containerPort: 3000
+          env:
+            # Учётка и пароль из SOPS-секрета. Действуют только при первом создании БД Grafana;
+            # для уже существующей БД пароль меняется вручную (см. README, раздел про Grafana).
+            - name: GF_SECURITY_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-admin
+                  key: admin-user
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-admin
+                  key: admin-password
+            - name: GF_USERS_ALLOW_SIGN_UP
+              value: "false"
+            - name: GF_USERS_ALLOW_ORG_CREATE
+              value: "false"
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "false"
+            - name: GF_AUTH_BASIC_ENABLED
+              value: "true"
+            - name: GF_SECURITY_DISABLE_GRAVATAR
+              value: "true"
+            - name: GF_SECURITY_ALLOW_EMBEDDING
+              value: "false"
+            - name: GF_ANALYTICS_REPORTING_ENABLED
+              value: "false"
+            - name: GF_ANALYTICS_CHECK_FOR_UPDATES
+              value: "false"
+            - name: GF_SNAPSHOTS_EXTERNAL_ENABLED
+              value: "false"
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
