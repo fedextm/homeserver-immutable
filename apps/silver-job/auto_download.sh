@@ -136,28 +136,33 @@ download_episode() {
   : > "$LIST_FILE"   # очищаем/создаем list.txt
 
   ########################################
-  # 2. Качаем первую часть (плеер) как 1.mp3
+  # 2. Качаем все части из data-episode-url (в порядке на странице)
   ########################################
+  # Сейчас на странице: первая часть — плеер, части 2..N — кнопки «Часть N»,
+  # у всех один и тот же атрибут data-episode-url. Дубли отбрасываем.
 
-  local FIRST_REL
-  FIRST_REL=$(printf '%s\n' "$HTML" \
+  local -a PART_URLS=()
+  mapfile -t PART_URLS < <(printf '%s\n' "$HTML" \
     | grep -oE 'data-episode-url="[^"]+\.mp3"' \
     | sed -E 's/data-episode-url="([^"]+)"/\1/' \
-    | sed -n '1p' || true)
+    | awk '!seen[$0]++' || true)
 
-  if [ -n "${FIRST_REL:-}" ]; then
-    local FIRST_URL="$BASE_URL$FIRST_REL"
-    echo "Downloading first part: $FIRST_URL -> 1.mp3"
-    wget "${WGET_OPTS[@]}" "$FIRST_URL" -O "1.mp3" || { echo "ERROR: не скачалась 1.mp3" >&2; return 1; }
-    printf "file '%s'\n" "1.mp3" >> "$LIST_FILE"
-  else
-    echo "WARNING: no data-episode-url found, skipping 1.mp3"
+  local PART_COUNT=${#PART_URLS[@]} N REL
+  if [ "$PART_COUNT" -eq 0 ]; then
+    echo "WARNING: no data-episode-url found"
   fi
+  for ((N = 1; N <= PART_COUNT; N++)); do
+    REL="${PART_URLS[$((N - 1))]}"
+    echo "Downloading part $N/$PART_COUNT: $BASE_URL$REL -> ${N}.mp3"
+    wget "${WGET_OPTS[@]}" "$BASE_URL$REL" -O "${N}.mp3" || { echo "ERROR: не скачалась ${N}.mp3" >&2; return 1; }
+    printf "file '%s'\n" "${N}.mp3" >> "$LIST_FILE"
+  done
 
   ########################################
   # 3. Качаем остальные части (список «Аудиозапись»)
   ########################################
 
+  if [ "$PART_COUNT" -le 1 ]; then   # старая вёрстка: остальные части в списке «Аудиозапись»
   printf '%s\n' "$HTML" \
     | awk -F'"' '/class="red audio bigaudio"/ {print $2, $4}' \
     | while read -r href title; do
@@ -175,6 +180,7 @@ download_episode() {
         # Добавляем в список для ffmpeg в порядке скачивания
         printf "file '%s'\n" "$OUT" >> "$LIST_FILE"
       done || { echo "ERROR: не все части выпуска скачались" >&2; return 1; }
+  fi
 
   ########################################
   # 4. Склейка mp3-частей без перекодирования
