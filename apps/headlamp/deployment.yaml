@@ -28,6 +28,8 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
             runAsNonRoot: true
+            runAsUser: 100    # образ задаёт пользователя по имени (headlamp), kubelet не может проверить non-root; UID как в официальном Helm-чарте
+            runAsGroup: 101
             capabilities:
               drop: ["ALL"]
           resources:
