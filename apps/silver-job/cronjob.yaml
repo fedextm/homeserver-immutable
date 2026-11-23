@@ -1,0 +1,73 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: silver-download
+  namespace: silver-job
+spec:
+  schedule: "0 7 * * 1"          # понедельник 07:00
+  timeZone: Europe/Warsaw
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1             # повтор безопасен: уже добавленные в плейлист выпуски не качаются заново
+      activeDeadlineSeconds: 14400
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: download
+              image: docker.io/library/alpine:3.24
+              workingDir: /work
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -eu
+                  # пакеты ставятся при каждом запуске (как в backup), образ не собираем
+                  apk add --no-cache bash curl wget ffmpeg jq grep sed gawk coreutils tzdata
+                  exec bash /scripts/auto_download.sh --auto
+              env:
+                - name: TZ
+                  value: Europe/Warsaw
+                - name: PROGRAM_URL
+                  value: "https://silver.ru/programs/zavtrak-do-obeda/"
+                - name: S3_MOUNT
+                  value: /var/mnt/s3
+                - name: PLAYLIST
+                  value: /var/mnt/s3/playlist
+                - name: PLAYLIST_PREFIX
+                  value: /music/s3
+              # root нужен для apk add и для записи в s3fs (файлы на нём принадлежат core, UID 1000)
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop: ["ALL"]
+                  add: ["CHOWN", "DAC_OVERRIDE", "FOWNER", "SETUID", "SETGID"]
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 128Mi
+                limits:
+                  cpu: "1"
+                  memory: 1Gi
+              volumeMounts:
+                - name: script
+                  mountPath: /scripts
+                  readOnly: true
+                - name: work
+                  mountPath: /work
+                - name: s3
+                  mountPath: /var/mnt/s3
+          volumes:
+            - name: script
+              configMap:
+                name: silver-script
+            - name: work
+              emptyDir:
+                sizeLimit: 3Gi    # одна передача ~350 МБ: части + склейка
+            - name: s3
+              hostPath:
+                path: /var/mnt/s3
+                type: Directory
