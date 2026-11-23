@@ -26,7 +26,7 @@ spec:
                 - |
                   set -eu
                   # пакеты ставятся при каждом запуске (как в backup), образ не собираем
-                  apk add --no-cache bash curl wget ffmpeg jq grep sed gawk coreutils tzdata
+                  apk add --no-cache bash curl wget ffmpeg jq grep sed gawk coreutils tzdata pv
                   exec bash /scripts/auto_download.sh --auto
               env:
                 - name: TZ

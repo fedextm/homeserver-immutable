@@ -208,7 +208,12 @@ download_episode() {
 
   if [ -n "$S3_MOUNT" ]; then
     echo "Copying to ${S3_MOUNT}/${S3_KEY}"
-    cp "$OUT_MP3" "${S3_MOUNT}/${S3_KEY}" || return 1
+    if command -v pv >/dev/null 2>&1; then
+      # прогресс-бар в stderr; -f нужен, потому что в поде нет tty; обновление раз в 5 секунд
+      pv -f -i 5 -N "$OUT_MP3" "$OUT_MP3" > "${S3_MOUNT}/${S3_KEY}" || return 1
+    else
+      cp "$OUT_MP3" "${S3_MOUNT}/${S3_KEY}" || return 1
+    fi
     chown 1000:1000 "${S3_MOUNT}/${S3_KEY}" 2>/dev/null || true
     # размер на диске и в s3fs должен совпасть, иначе загрузка оборвалась
     if [ "$(stat -c %s "$OUT_MP3")" != "$(stat -c %s "${S3_MOUNT}/${S3_KEY}")" ]; then
