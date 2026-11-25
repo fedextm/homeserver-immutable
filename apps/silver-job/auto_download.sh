@@ -56,6 +56,38 @@ ARTIST="Петя FM"
 BASE_DIR="$PWD"
 
 ########################################
+# Загрузка файла с компактным прогрессом
+########################################
+# wget без tty пишет строку на каждые 50 КБ и забивает логи, поэтому запускаем его тихо
+# и раз в PROGRESS_INTERVAL секунд печатаем одну строку с размером и процентами.
+# Использует WGET_OPTS из download_episode (динамическая область видимости bash).
+
+PROGRESS_INTERVAL="${PROGRESS_INTERVAL:-30}"
+
+download_file() {
+  local URL="$1" OUT="$2" TOTAL PID
+  TOTAL=$(curl -sIL --connect-timeout 10 --max-time 30 -A "$UA" "$URL" \
+    | awk 'tolower($1) == "content-length:" {v = $2 + 0} END {print v + 0}' || true)
+  TOTAL="${TOTAL:-0}"
+
+  wget -q "${WGET_OPTS[@]}" "$URL" -O "$OUT" &
+  PID=$!
+
+  while kill -0 "$PID" 2>/dev/null; do
+    sleep "$PROGRESS_INTERVAL"
+    kill -0 "$PID" 2>/dev/null || break
+    stat -c %s "$OUT" 2>/dev/null | awk -v name="$OUT" -v total="$TOTAL" '{
+      cur = $1 / 1048576
+      if (total > 0) printf "  %s: %.1f / %.1f МиБ (%d%%)\n", name, cur, total / 1048576, $1 * 100 / total
+      else printf "  %s: %.1f МиБ\n", name, cur
+    }' || true
+  done
+
+  wait "$PID" || return 1
+  echo "  $OUT: готово, $(stat -c %s "$OUT" | awk '{printf "%.1f", $1 / 1048576}') МиБ"
+}
+
+########################################
 # Скачивание одного выпуска по ссылке на его страницу
 ########################################
 
@@ -154,7 +186,7 @@ download_episode() {
   for ((N = 1; N <= PART_COUNT; N++)); do
     REL="${PART_URLS[$((N - 1))]}"
     echo "Downloading part $N/$PART_COUNT: $BASE_URL$REL -> ${N}.mp3"
-    wget "${WGET_OPTS[@]}" "$BASE_URL$REL" -O "${N}.mp3" || { echo "ERROR: не скачалась ${N}.mp3" >&2; return 1; }
+    download_file "$BASE_URL$REL" "${N}.mp3" || { echo "ERROR: не скачалась ${N}.mp3" >&2; return 1; }
     printf "file '%s'\n" "${N}.mp3" >> "$LIST_FILE"
   done
 
@@ -175,7 +207,7 @@ download_episode() {
         fi
 
         echo "Downloading $URL -> $OUT (title: $title)"
-        wget "${WGET_OPTS[@]}" "$URL" -O "$OUT" || { echo "ERROR: не скачалась часть $OUT" >&2; exit 1; }
+        download_file "$URL" "$OUT" || { echo "ERROR: не скачалась часть $OUT" >&2; exit 1; }
 
         # Добавляем в список для ffmpeg в порядке скачивания
         printf "file '%s'\n" "$OUT" >> "$LIST_FILE"
